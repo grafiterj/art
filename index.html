@@ -508,7 +508,9 @@
       activeProfile: 'gj_active_profile_v1'
     };
 
-    function loadData(key, defaultValue) {
+        function loadData(key, defaultValue) {
+      if (key === LS.profiles) return window.profiles || defaultValue;
+      if (key === LS.budgets) return window.buggets || defaultValue;
       try {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : defaultValue;
@@ -518,46 +520,39 @@
     }
 
     function saveData(key, value) {
+      if (key === LS.budgets) {
+        // Se for um novo orçamento, envia para o Firebase
+        if (Array.isArray(value) && value.length > 0) {
+          const ultimoPedido = value[value.length - 1];
+          if (window.salvarPedidoNoFirebase) {
+            window.salvarPedidoNoFirebase(ultimoPedido);
+          }
+        }
+        return;
+      }
+      
+      if (key === LS.profiles) {
+        // Se for um novo perfil de artista, envia para o Firebase
+        if (Array.isArray(value) && value.length > 0) {
+          const ultimoPerfil = value[value.length - 1];
+          if (window.salvarArtistaNoFirebase) {
+            window.salvarArtistaNoFirebase(ultimoPerfil);
+          }
+        }
+        return;
+      }
+
       localStorage.setItem(key, JSON.stringify(value));
     }
 
-    // Inicialização de dados (mantive os dados originais e adicionei perfis)
+    // Inicialização de dados
     function initData() {
-      if (!localStorage.getItem(LS.portfolio)) {
-        // cada item agora terá ownerId: vinculado a perfil padrão 'artist-default'
-        const defaultOwner = 'artist-default';
-        saveData(LS.portfolio, [
-          { id: '1', src: 'https://images.unsplash.com/photo-1526318472351-c75fcf0706c8?auto=format&fit=crop&w=800&q=80', title: 'Mural Lapa', ownerId: defaultOwner },
-          { id: '2', src: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=800&q=80', title: 'Grafite Botafogo', ownerId: defaultOwner }
-        ]);
-      }
-      if (!localStorage.getItem(LS.budgets)) {
-        saveData(LS.budgets, [
-          { id: '101', client: 'Carlos Santos', phone: '(21) 98888-7777', address: 'Ipanema, RJ', desc: 'Mural decorativo para varanda gourmet.', status: 'open' }
-        ]);
-      }
+      // O leitor em tempo real do Firebase no final da página assume a inicialização dos perfis e pedidos
       if (!localStorage.getItem(LS.credits)) {
-        saveData(LS.credits, 5); // 5 créditos padrão para testes
-      }
-      // Perfis
-      if (!localStorage.getItem(LS.profiles)) {
-        const defaultProfile = {
-          id: 'artist-default',
-          name: 'Artista Cadastrado',
-          location: 'Rio de Janeiro, RJ',
-          bio: 'Artista de rua e muralista. Experiência em intervenções urbanas e projetos comerciais.',
-          specialties: 'Murais, Lettering',
-        };
-        saveData(LS.profiles, [ defaultProfile ]);
-        saveData(LS.activeProfile, defaultProfile.id);
-      } else {
-        // se houver perfis mas sem activeProfile, selecionar o primeiro
-        const profiles = loadData(LS.profiles, []);
-        if (!localStorage.getItem(LS.activeProfile) && profiles.length) {
-          saveData(LS.activeProfile, profiles[0].id);
-        }
+        localStorage.setItem(LS.credits, JSON.stringify(5));
       }
     }
+
 
     // Navegação de Telas
     function showView(viewId) {
