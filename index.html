@@ -882,9 +882,6 @@
       }).join('');
       container.innerHTML = html;
     }
-
-    // Inicialização
-        // Inicialização do site via Firebase
   </script>
 
   <!-- SDKs do Firebase (App + Firestore) -->
@@ -914,7 +911,7 @@
       if (typeof renderAll === 'function') renderAll();
     });
 
-    // 2. PUXA OS PEDIDOS DOS CLIENTES EM TEMPO REAL (Para os grafiteiros verem)
+    // 2. PUXA OS PEDIDOS DOS CLIENTES EM TEMPO REAL
     onSnapshot(collection(db, "pedidos"), (snapshot) => {
       window.buggets = [];
       snapshot.forEach((doc) => {
@@ -952,3 +949,4 @@
     };
   </script>
 </html>
+
