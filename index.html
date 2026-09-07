@@ -1,4 +1,4 @@
-                  <!doctype html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
@@ -199,6 +199,22 @@
     .status-badge.open{ background:#fff7ed; color:#b45309; border:1px solid rgba(196,74,12,0.06); }
     .status-badge.closed{ background:#f0fdf4; color:#166534; border:1px solid rgba(16,185,129,0.06); }
 
+    /* Modal de Termos de Uso */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+      backdrop-filter: blur(4px); padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--card); border-radius: var(--radius-lg); padding: 28px;
+      max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;
+      border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(15,23,42,0.15);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h3 { font-family: var(--font-heading); font-size: 22px; color: var(--accent); }
+    .modal-body { font-size: 14px; color: var(--muted); display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
     footer{ text-align:center; color:var(--muted); font-size:13px; margin-top:28px; }
 
     @media (max-width:900px){
@@ -351,8 +367,16 @@
                   <input id="artistName" type="text" placeholder="Ex: Nina Graff" required>
                 </div>
                 <div style="margin-bottom:8px;">
+                  <label for="artistCpf">CPF (Apenas 1 por cadastro)</label>
+                  <input id="artistCpf" type="text" placeholder="000.000.000-00" required>
+                </div>
+                <div style="margin-bottom:8px;">
                   <label for="artistLocation">Localização</label>
                   <input id="artistLocation" type="text" placeholder="Ex: Zona Sul, RJ" required>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <label for="artistPhotoInput">Foto do Artista</label>
+                  <input id="artistPhotoInput" type="file" accept="image/*">
                 </div>
                 <div style="margin-bottom:8px;">
                   <label for="artistBio">Bio</label>
@@ -413,6 +437,14 @@
               <div class="form-group">
                 <label for="desc">Descrição do Projeto e Medidas Aprox.</label>
                 <textarea id="desc" placeholder="Ex: Parede de 4m x 3m na sala comercial. Gostaria de um estilo abstrato e colorido." required></textarea>
+              </div>
+
+              <!-- Termos de Uso com Aceite Obrigatório via Pop-up -->
+              <div style="margin: 16px 0; display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" id="termsCheck" required style="width: auto; margin-top: 3px; cursor: pointer;">
+                <label for="termsCheck" style="margin-bottom:0; font-weight:400; font-size:13px; cursor:pointer;">
+                  Li e concordo com os <a href="#" onclick="openTermsModal(event)" style="color:var(--accent-2); font-weight:600; text-decoration: underline;">Termos de Uso</a> da plataforma Grafiterj.
+                </label>
               </div>
 
               <button class="btn primary" type="submit">Publicar Pedido de Orçamento</button>
@@ -479,6 +511,25 @@
       </div>
     </section>
 
+    <!-- Modal Termos de Uso -->
+    <div id="termsModal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Termos de Uso — Grafiterj</h3>
+          <button class="btn sm" onclick="closeTermsModal()">Fechar</button>
+        </div>
+        <div class="modal-body">
+          <p>Bem-vindo à Grafiterj. Ao solicitar orçamentos ou utilizar nossa plataforma de curadoria e arte urbana no Rio de Janeiro, você concorda com as diretrizes abaixo:</p>
+          <p><strong>1. Transparência e Contato:</strong> Os dados de contato fornecidos nas solicitações de orçamento são utilizados exclusivamente para conectar contratantes aos artistas locais cadastrados.</p>
+          <p><strong>2. Compromisso de Execução:</strong> O alinhamento de valores, prazos e especificações técnicas de murais ou pinturas ocorre diretamente entre as partes.</p>
+          <p><strong>3. Propriedade Intelectual:</strong> As imagens de portfólio exibidas pertencem aos respectivos artistas e curadores parceiros da plataforma.</p>
+        </div>
+        <div style="text-align: right;">
+          <button class="btn primary" onclick="acceptTermsAndClose()">Entendido e Concordo</button>
+        </div>
+      </div>
+    </div>
+
     <footer>
       &copy; Grafiterj — Curadoria & Plataforma de Arte Urbana RJ
     </footer>
@@ -491,7 +542,8 @@
       budgets: 'gj_budgets_v2',
       credits: 'gj_credits_v2',
       profiles: 'gj_profiles_v1',
-      activeProfile: 'gj_active_profile_v1'
+      activeProfile: 'gj_active_profile_v1',
+      myProfiles: 'gj_my_profiles_ownership_v1'
     };
 
     // Leitura priorizando a nuvem (window.profiles e window.buggets)
@@ -520,7 +572,7 @@
 
     function initData() {
       if (!localStorage.getItem(LS.credits)) {
-        localStorage.setItem(LS.credits, JSON.stringify(5));
+        localStorage.setItem(LS.credits, JSON.stringify(2)); // Alterado de 5 para 2 créditos iniciais
       }
     }
 
@@ -539,6 +591,21 @@
       renderCredits();
       renderProfilesList();
       renderFeaturedArtists();
+    }
+
+    /* Modal de Termos de Uso */
+    function openTermsModal(e) {
+      if(e) e.preventDefault();
+      document.getElementById('termsModal').classList.add('active');
+    }
+
+    function closeTermsModal() {
+      document.getElementById('termsModal').classList.remove('active');
+    }
+
+    function acceptTermsAndClose() {
+      document.getElementById('termsCheck').checked = true;
+      closeTermsModal();
     }
 
     /* Portfólio */
@@ -656,9 +723,15 @@
       }
     }
 
-    /* Envio de Pedido de Cliente (Gravando na nuvem) */
+    /* Envio de Pedido de Cliente */
     async function submitRequest(e) {
       e.preventDefault();
+      const termsChecked = document.getElementById('termsCheck').checked;
+      if (!termsChecked) {
+        alert('Você precisa aceitar os Termos de Uso para prosseguir.');
+        return;
+      }
+
       const client = document.getElementById('clientName').value;
       const phone = document.getElementById('clientPhone').value;
       const address = document.getElementById('address').value;
@@ -702,25 +775,39 @@
       renderActiveProfileCard();
     }
 
-    /* Perfis de Artistas (Gravando na nuvem) */
+    /* Perfis de Artistas com Validação de CPF e Foto */
     function renderProfilesList() {
       const profiles = loadData(LS.profiles, []);
       const activeId = loadData(LS.activeProfile, null);
+      const myOwnedProfiles = loadData(LS.myProfiles, []);
       const container = document.getElementById('profilesList');
 
-      container.innerHTML = profiles.map(p => `
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; border-radius:8px; padding:8px; border:1px solid var(--border); background:#fff;">
-          <div>
-            <div style="font-weight:700; color:var(--accent-2);">${p.name}</div>
-            <div style="font-size:12px; color:var(--muted);">${p.location} • ${p.specialties}</div>
+      if (!profiles.length) {
+        container.innerHTML = '<div style="color:var(--muted); font-size:13px;">Nenhum artista cadastrado.</div>';
+        return;
+      }
+
+      container.innerHTML = profiles.map(p => {
+        const isOwner = myOwnedProfiles.includes(p.id);
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; border-radius:8px; padding:10px; border:1px solid var(--border); background:#fff;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              ${p.photo ? `<img src="${p.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : `<div style="width:36px; height:36px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted);">🎨</div>`}
+              <div>
+                <div style="font-weight:700; color:var(--accent-2);">${p.name}</div>
+                <div style="font-size:12px; color:var(--muted);">${p.location} • ${p.specialties}</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              ${activeId === p.id ? `<span style="font-size:11px; color:var(--accent); font-weight:700;">Ativo</span>` : `<button class="btn sm" onclick="selectProfile('${p.id}')">Entrar</button>`}
+              ${isOwner ? `
+                <button class="btn sm" onclick="editProfile('${p.id}')">Editar</button>
+                <button class="btn sm" onclick="deleteProfile('${p.id}')">Excluir</button>
+              ` : ''}
+            </div>
           </div>
-          <div style="display:flex; gap:8px; align-items:center;">
-            ${activeId === p.id ? `<span style="font-size:12px; color:var(--accent); font-weight:700;">Ativo</span>` : `<button class="btn sm" onclick="selectProfile('${p.id}')">Entrar</button>`}
-            <button class="btn sm" onclick="editProfile('${p.id}')">Editar</button>
-            <button class="btn sm" onclick="deleteProfile('${p.id}')">Excluir</button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function renderActiveProfileCard() {
@@ -738,31 +825,78 @@
       }
 
       container.innerHTML = `
-        <div style="font-weight:800; font-size:16px; color:var(--accent-2);">${p.name}</div>
-        <div style="font-size:13px; color:var(--muted); margin-top:6px;">${p.location} • ${p.specialties}</div>
-        <div style="font-size:13px; color:var(--muted); margin-top:8px;">${p.bio}</div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          ${p.photo ? `<img src="${p.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : ``}
+          <div>
+            <div style="font-weight:800; font-size:16px; color:var(--accent-2);">${p.name}</div>
+            <div style="font-size:13px; color:var(--muted);">${p.location} • ${p.specialties}</div>
+          </div>
+        </div>
+        <div style="font-size:13px; color:var(--muted);">${p.bio}</div>
       `;
     }
+
+    let editingProfileId = null;
 
     async function createOrUpdateProfile(e) {
       e.preventDefault();
       const name = document.getElementById('artistName').value.trim();
+      const cpf = document.getElementById('artistCpf').value.trim();
       const location = document.getElementById('artistLocation').value.trim();
       const bio = document.getElementById('artistBio').value.trim();
       const specialties = document.getElementById('artistSpec').value.trim();
+      const photoInput = document.getElementById('artistPhotoInput');
 
-      const newProfile = { name, location, bio, specialties };
+      const profiles = loadData(LS.profiles, []);
 
-      if (window.salvarArtistaNoFirebase) {
-        await window.salvarArtistaNoFirebase(newProfile);
+      // Validar se o CPF já existe em outro perfil
+      const existingCpf = profiles.find(p => p.cpf === cpf && p.id !== editingProfileId);
+      if (existingCpf) {
+        alert('Este CPF já está cadastrado na plataforma. Cada artista pode ter apenas um cadastro por CPF.');
+        return;
       }
 
-      document.getElementById('profileForm').reset();
-      renderAll();
+      const processSave = (photoData) => {
+        const profileData = {
+          name,
+          cpf,
+          location,
+          bio,
+          specialties,
+          photo: photoData || (editingProfileId ? (profiles.find(p => p.id === editingProfileId)?.photo || '') : '')
+        };
+
+        if (editingProfileId) {
+          // Atualização local/nuvem
+          profileData.id = editingProfileId;
+          if (window.atualizarArtistaNoFirebase) {
+            window.atualizarArtistaNoFirebase(profileData);
+          }
+          editingProfileId = null;
+        } else {
+          // Criação nova
+          if (window.salvarArtistaNoFirebase) {
+            window.salvarArtistaNoFirebase(profileData);
+          }
+        }
+
+        document.getElementById('profileForm').reset();
+      };
+
+      if (photoInput.files && photoInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          processSave(ev.target.result);
+        };
+        reader.readAsDataURL(photoInput.files[0]);
+      } else {
+        processSave(null);
+      }
     }
 
     function clearProfileForm() {
       document.getElementById('profileForm').reset();
+      editingProfileId = null;
     }
 
     function selectProfile(id) {
@@ -773,20 +907,38 @@
 
     function editProfile(id) {
       const profiles = loadData(LS.profiles, []);
+      const myOwnedProfiles = loadData(LS.myProfiles, []);
+      
+      // Apenas o responsável (dono do cadastro neste navegador) pode editar
+      if (!myOwnedProfiles.includes(id)) {
+        alert('Você não tem permissão para editar o perfil de outro artista.');
+        return;
+      }
+
       const p = profiles.find(pp => pp.id === id);
       if (!p) return alert('Perfil não encontrado.');
+      
+      editingProfileId = id;
       document.getElementById('artistName').value = p.name;
+      document.getElementById('artistCpf').value = p.cpf || '';
       document.getElementById('artistLocation').value = p.location;
       document.getElementById('artistBio').value = p.bio;
       document.getElementById('artistSpec').value = p.specialties;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function deleteProfile(id) {
-      if (!confirm('Excluir perfil?')) return;
-      let profiles = loadData(LS.profiles, []);
-      profiles = profiles.filter(p => p.id !== id);
-      saveData(LS.profiles, profiles);
-      renderAll();
+      const myOwnedProfiles = loadData(LS.myProfiles, []);
+      if (!myOwnedProfiles.includes(id)) {
+        alert('Você não tem permissão para excluir o perfil de outro artista.');
+        return;
+      }
+
+      if (!confirm('Deseja realmente excluir este perfil?')) return;
+      
+      if (window.deletarArtistaNoFirebase) {
+        window.deletarArtistaNoFirebase(id);
+      }
     }
 
     /* Destaques (Home) */
@@ -800,16 +952,16 @@
       }
       const html = profiles.slice(0,4).map(p => {
         const sample = portfolio.find(i => i.ownerId === p.id);
-        const img = sample ? sample.src : 'https://via.placeholder.com/300x200?text=Sem+Imagem';
+        const img = sample ? sample.src : (p.photo || 'https://via.placeholder.com/300x200?text=Sem+Imagem');
         return `
           <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
-            <div style="width:64px; height:48px; border-radius:8px; overflow:hidden; border:1px solid var(--border);"><img src="${img}" style="width:100%; height:100%; object-fit:cover;"></div>
+            <div style="width:54px; height:48px; border-radius:8px; overflow:hidden; border:1px solid var(--border);"><img src="${img}" style="width:100%; height:100%; object-fit:cover;"></div>
             <div style="flex:1;">
               <div style="font-weight:700; color:var(--accent-2);">${p.name}</div>
               <div style="font-size:12px; color:var(--muted);">${p.location} • ${p.specialties}</div>
             </div>
             <div>
-              <button class="btn sm" onclick="selectProfile('${p.id}')">Ver Perfil</button>
+              <button class="btn sm" onclick="selectProfile('${p.id}')">Ver</button>
             </div>
           </div>
         `;
@@ -821,10 +973,10 @@
     initData();
   </script>
 
-  <!-- SDKs do Firebase (Módulo de conexão direta) -->
+  <!-- SDKs do Firebase (Módulo de conexão direta com controle de propriedade e CPF) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAMTNTizh8Sm6Fe-8p-KZxDAqYAdQGnDfc",
@@ -841,7 +993,7 @@
     // Escuta em tempo real dos Artistas
     onSnapshot(collection(db, "artistas"), (snapshot) => {
       const list = [];
-      snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+      snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
       window.profiles = list;
       if (typeof renderAll === 'function') renderAll();
     });
@@ -849,7 +1001,7 @@
     // Escuta em tempo real dos Pedidos
     onSnapshot(collection(db, "pedidos"), (snapshot) => {
       const list = [];
-      snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+      snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
       window.buggets = list;
       if (typeof renderAll === 'function') renderAll();
     });
@@ -868,17 +1020,64 @@
       }
     };
 
-    // Salvar Artista no Firestore
+    // Salvar Artista no Firestore com controle de dono (MyProfiles)
     window.salvarArtistaNoFirebase = async function(dadosArtista) {
       try {
-        await addDoc(collection(db, "artistas"), {
+        const docRef = await addDoc(collection(db, "artistas"), {
           ...dadosArtista,
           criadoEm: new Date().toISOString()
         });
+
+        // Registrar propriedade no localStorage deste navegador
+        let myOwned = JSON.parse(localStorage.getItem('gj_my_profiles_ownership_v1') || '[]');
+        myOwned.push(docRef.id);
+        localStorage.setItem('gj_my_profiles_ownership_v1', JSON.stringify(myOwned));
+
+        // Definir automaticamente como perfil ativo
+        localStorage.setItem('gj_active_profile_v1', JSON.stringify(docRef.id));
+
         alert("Perfil de artista cadastrado com sucesso!");
+        if (typeof renderAll === 'function') renderAll();
       } catch (e) {
         console.error("Erro no Firebase (Artistas):", e);
         alert("Erro ao salvar perfil do artista na nuvem.");
+      }
+    };
+
+    // Atualizar Artista no Firestore
+    window.atualizarArtistaNoFirebase = async function(dadosArtista) {
+      try {
+        const docRef = doc(db, "artistas", dadosArtista.id);
+        const { id, ...dataToUpdate } = dadosArtista;
+        await updateDoc(docRef, dataToUpdate);
+        alert("Perfil atualizado com sucesso!");
+        if (typeof renderAll === 'function') renderAll();
+      } catch (e) {
+        console.error("Erro ao atualizar artista:", e);
+        alert("Erro ao atualizar perfil na nuvem.");
+      }
+    };
+
+    // Deletar Artista no Firestore
+    window.deletarArtistaNoFirebase = async function(id) {
+      try {
+        await deleteDoc(doc(db, "artistas", id));
+        
+        // Remover da lista de propriedade local
+        let myOwned = JSON.parse(localStorage.getItem('gj_my_profiles_ownership_v1') || '[]');
+        myOwned = myOwned.filter(item => item !== id);
+        localStorage.setItem('gj_my_profiles_ownership_v1', JSON.stringify(myOwned));
+
+        // Se era o ativo, limpa
+        if (JSON.parse(localStorage.getItem('gj_active_profile_v1')) === id) {
+          localStorage.removeItem('gj_active_profile_v1');
+        }
+
+        alert("Perfil excluído com sucesso.");
+        if (typeof renderAll === 'function') renderAll();
+      } catch (e) {
+        console.error("Erro ao excluir artista:", e);
+        alert("Erro ao excluir perfil.");
       }
     };
   </script>
