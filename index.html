@@ -884,27 +884,71 @@
     }
 
     // Inicialização
-    initData();
-    renderAll();
+        // Inicialização do site via Firebase
   </script>
-</body> 
+
+  <!-- SDKs do Firebase (App + Firestore) -->
   <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyAMTNTizh8Sm6Fe-8p-KZxDAqYAdQGnDfc",
-    authDomain: "grafiterj.firebaseapp.com",
-    projectId: "grafiterj",
-    storageBucket: "grafiterj.firebasestorage.app",
-    messagingSenderId: "921737954297",
-    appId: "1:921737954297:web:a586c06ed3f388e8863328"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMTNTizh8Sm6Fe-8p-KZxDAqYAdQGnDfc",
+      authDomain: "grafiterj.firebaseapp.com",
+      projectId: "grafiterj",
+      storageBucket: "grafiterj.firebasestorage.app",
+      messagingSenderId: "921737954297",
+      appId: "1:921737954297:web:a586c06ed3f388e8863328"
+    };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-</script>
-  </html>
+    // Inicializa o Firebase e o Banco
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 1. PUXA OS ARTISTAS EM TEMPO REAL
+    onSnapshot(collection(db, "artistas"), (snapshot) => {
+      window.profiles = [];
+      snapshot.forEach((doc) => {
+        window.profiles.push({ id: doc.id, ...doc.data() });
+      });
+      if (typeof renderAll === 'function') renderAll();
+    });
+
+    // 2. PUXA OS PEDIDOS DOS CLIENTES EM TEMPO REAL (Para os grafiteiros verem)
+    onSnapshot(collection(db, "pedidos"), (snapshot) => {
+      window.buggets = [];
+      snapshot.forEach((doc) => {
+        window.buggets.push({ id: doc.id, ...doc.data() });
+      });
+      if (typeof renderAll === 'function') renderAll();
+    });
+
+    // 3. FUNÇÃO PARA O CLIENTE SALVAR NOVO PEDIDO DE ORÇAMENTO
+    window.salvarPedidoNoFirebase = async function(dadosPedido) {
+      try {
+        await addDoc(collection(db, "pedidos"), {
+          ...dadosPedido,
+          criadoEm: new Date().toISOString()
+        });
+        alert("Solicitação de orçamento enviada com sucesso!");
+      } catch (e) {
+        console.error("Erro ao salvar pedido: ", e);
+        alert("Erro ao enviar pedido. Tente novamente.");
+      }
+    };
+
+    // 4. FUNÇÃO PARA O ARTISTA SALVAR PERFIL/FOTO
+    window.salvarArtistaNoFirebase = async function(dadosArtista) {
+      try {
+        await addDoc(collection(db, "artistas"), {
+          ...dadosArtista,
+          criadoEm: new Date().toISOString()
+        });
+        alert("Perfil do artista salvo com sucesso!");
+      } catch (e) {
+        console.error("Erro ao salvar perfil: ", e);
+        alert("Erro ao salvar perfil.");
+      }
+    };
+  </script>
+</html>
