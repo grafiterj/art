@@ -182,6 +182,7 @@
       padding:6px 8px;
       border-radius:8px;
       font-size:12px;
+      font-weight:600;
       border:1px solid rgba(15,23,42,0.04);
       backdrop-filter: blur(4px);
     }
@@ -375,7 +376,7 @@
                   <input id="artistLocation" type="text" placeholder="Ex: Zona Sul, RJ" required>
                 </div>
                 <div style="margin-bottom:8px;">
-                  <label for="artistPhotoInput">Foto do Artista</label>
+                  <label for="artistPhotoInput">Foto do Artista (Pessoal)</label>
                   <input id="artistPhotoInput" type="file" accept="image/*">
                 </div>
                 <div style="margin-bottom:8px;">
@@ -439,7 +440,7 @@
                 <textarea id="desc" placeholder="Ex: Parede de 4m x 3m na sala comercial. Gostaria de um estilo abstrato e colorido." required></textarea>
               </div>
 
-              <!-- Termos de Uso com Aceite Obrigatório via Pop-up -->
+              <!-- Termos de Uso -->
               <div style="margin: 16px 0; display: flex; align-items: flex-start; gap: 10px;">
                 <input type="checkbox" id="termsCheck" required style="width: auto; margin-top: 3px; cursor: pointer;">
                 <label for="termsCheck" style="margin-bottom:0; font-weight:400; font-size:13px; cursor:pointer;">
@@ -546,7 +547,6 @@
       myProfiles: 'gj_my_profiles_ownership_v1'
     };
 
-    // Leitura priorizando a nuvem (window.profiles e window.buggets)
     function loadData(key, defaultValue) {
       if (key === LS.profiles) {
         return (window.profiles && window.profiles.length) ? window.profiles : defaultValue;
@@ -572,7 +572,7 @@
 
     function initData() {
       if (!localStorage.getItem(LS.credits)) {
-        localStorage.setItem(LS.credits, JSON.stringify(2)); // Alterado de 5 para 2 créditos iniciais
+        localStorage.setItem(LS.credits, JSON.stringify(2)); // Definido para 2 créditos iniciais
       }
     }
 
@@ -608,20 +608,24 @@
       closeTermsModal();
     }
 
-    /* Portfólio */
+    /* Upload de Fotos do Portfólio associando ao Nome do Perfil Ativo */
     function handlePortfolioUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
 
+      const activeProfileId = loadData(LS.activeProfile, null);
+      const profiles = loadData(LS.profiles, []);
+      const activeProfile = profiles.find(p => p.id === activeProfileId);
+
       const reader = new FileReader();
       reader.onload = function(ev) {
         const portfolio = loadData(LS.portfolio, []);
-        const activeProfileId = loadData(LS.activeProfile, null);
         portfolio.unshift({
           id: Date.now().toString(),
           src: ev.target.result,
           title: file.name,
-          ownerId: activeProfileId
+          ownerId: activeProfileId,
+          ownerName: activeProfile ? activeProfile.name : ''
         });
         saveData(LS.portfolio, portfolio);
         renderPortfolio();
@@ -657,6 +661,7 @@
       renderPublicGallery();
     }
 
+    /* Galeria Pública vinculando a Foto ao Nome do Artista */
     function renderPublicGallery() {
       const list = loadData(LS.portfolio, []);
       const profiles = loadData(LS.profiles, []);
@@ -665,11 +670,11 @@
       const slice = list.slice(0, 12);
       container.innerHTML = slice.map(item => {
         const owner = profiles.find(p => p.id === item.ownerId);
-        const meta = owner ? owner.name : '';
+        const artistName = owner ? owner.name : (item.ownerName || 'Artista Grafiterj');
         return `
           <div class="thumb">
             <img src="${item.src}" alt="${item.title}">
-            ${meta ? `<div class="meta">${meta}</div>` : ''}
+            <div class="meta">${artistName}</div>
           </div>
         `;
       }).join('');
@@ -723,7 +728,7 @@
       }
     }
 
-    /* Envio de Pedido de Cliente */
+    /* Envio de Pedido do Cliente */
     async function submitRequest(e) {
       e.preventDefault();
       const termsChecked = document.getElementById('termsCheck').checked;
@@ -775,7 +780,7 @@
       renderActiveProfileCard();
     }
 
-    /* Perfis de Artistas com Validação de CPF e Foto */
+    /* Perfis de Artistas */
     function renderProfilesList() {
       const profiles = loadData(LS.profiles, []);
       const activeId = loadData(LS.activeProfile, null);
@@ -849,7 +854,7 @@
 
       const profiles = loadData(LS.profiles, []);
 
-      // Validar se o CPF já existe em outro perfil
+      // Validar CPF único
       const existingCpf = profiles.find(p => p.cpf === cpf && p.id !== editingProfileId);
       if (existingCpf) {
         alert('Este CPF já está cadastrado na plataforma. Cada artista pode ter apenas um cadastro por CPF.');
@@ -867,14 +872,12 @@
         };
 
         if (editingProfileId) {
-          // Atualização local/nuvem
           profileData.id = editingProfileId;
           if (window.atualizarArtistaNoFirebase) {
             window.atualizarArtistaNoFirebase(profileData);
           }
           editingProfileId = null;
         } else {
-          // Criação nova
           if (window.salvarArtistaNoFirebase) {
             window.salvarArtistaNoFirebase(profileData);
           }
@@ -909,7 +912,6 @@
       const profiles = loadData(LS.profiles, []);
       const myOwnedProfiles = loadData(LS.myProfiles, []);
       
-      // Apenas o responsável (dono do cadastro neste navegador) pode editar
       if (!myOwnedProfiles.includes(id)) {
         alert('Você não tem permissão para editar o perfil de outro artista.');
         return;
@@ -973,7 +975,7 @@
     initData();
   </script>
 
-  <!-- SDKs do Firebase (Módulo de conexão direta com controle de propriedade e CPF) -->
+  <!-- SDKs do Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -1020,7 +1022,7 @@
       }
     };
 
-    // Salvar Artista no Firestore com controle de dono (MyProfiles)
+    // Salvar Artista no Firestore com controle de dono
     window.salvarArtistaNoFirebase = async function(dadosArtista) {
       try {
         const docRef = await addDoc(collection(db, "artistas"), {
@@ -1028,12 +1030,10 @@
           criadoEm: new Date().toISOString()
         });
 
-        // Registrar propriedade no localStorage deste navegador
         let myOwned = JSON.parse(localStorage.getItem('gj_my_profiles_ownership_v1') || '[]');
         myOwned.push(docRef.id);
         localStorage.setItem('gj_my_profiles_ownership_v1', JSON.stringify(myOwned));
 
-        // Definir automaticamente como perfil ativo
         localStorage.setItem('gj_active_profile_v1', JSON.stringify(docRef.id));
 
         alert("Perfil de artista cadastrado com sucesso!");
@@ -1063,12 +1063,10 @@
       try {
         await deleteDoc(doc(db, "artistas", id));
         
-        // Remover da lista de propriedade local
         let myOwned = JSON.parse(localStorage.getItem('gj_my_profiles_ownership_v1') || '[]');
         myOwned = myOwned.filter(item => item !== id);
         localStorage.setItem('gj_my_profiles_ownership_v1', JSON.stringify(myOwned));
 
-        // Se era o ativo, limpa
         if (JSON.parse(localStorage.getItem('gj_active_profile_v1')) === id) {
           localStorage.removeItem('gj_active_profile_v1');
         }
