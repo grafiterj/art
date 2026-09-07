@@ -82,7 +82,7 @@
     }
     .brand-text p{ font-size:12px; color:var(--muted); margin-top:2px; }
 
-    nav.top-nav{ display:flex; gap:10px; align-items:center; }
+    nav.top-nav{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
     .btn{
       font-family:var(--font-body);
@@ -158,20 +158,45 @@
     }
     .service{
       border-radius:12px;
-      padding:18px;
+      padding:16px;
       background:linear-gradient(180deg,#fff,#fbfbfb);
       border:1px solid var(--border);
-      min-height:120px;
       display:flex;
       flex-direction:column;
-      justify-content:center;
-      gap:8px;
+      gap:10px;
+    }
+    .service img{
+      width:100%;
+      height:120px;
+      object-fit:cover;
+      border-radius:8px;
+      border:1px solid var(--border);
     }
     .service h3{ font-family:var(--font-heading); font-size:18px; color:var(--accent-2); }
     .service p{ color:var(--muted); font-size:13px; }
 
-    .gallery{ display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:12px; }
-    .thumb{ border-radius:10px; overflow:hidden; background:#f3f4f6; border:1px solid var(--border); aspect-ratio:4/3; display:block; position:relative; }
+    /* Carrossel da Direita para a Esquerda */
+    .carousel-container {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      border-radius: 10px;
+    }
+    .carousel-track {
+      display: flex;
+      gap: 12px;
+      width: max-content;
+      animation: scrollLeft 35s linear infinite;
+    }
+    .carousel-container:hover .carousel-track {
+      animation-play-state: paused;
+    }
+    @keyframes scrollLeft {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .gallery{ display:flex; gap:12px; }
+    .thumb{ border-radius:10px; overflow:hidden; background:#f3f4f6; border:1px solid var(--border); min-width:200px; width:200px; aspect-ratio:4/3; display:block; position:relative; flex-shrink:0; }
     .thumb img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .35s ease; }
     .thumb:hover img{ transform:scale(1.03); }
     .thumb .meta{
@@ -187,8 +212,58 @@
       backdrop-filter: blur(4px);
     }
 
+    /* FAQ Accordion */
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .faq-question {
+      width: 100%;
+      padding: 14px 18px;
+      text-align: left;
+      background: none;
+      border: none;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--accent);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-answer {
+      padding: 0 18px 14px 18px;
+      font-size: 13px;
+      color: var(--muted);
+      display: none;
+    }
+    .faq-item.active .faq-answer { display: block; }
+
+    /* Aprendizagem Criativa */
+    .learning-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+    .learning-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .learning-card h3 { font-family: var(--font-heading); font-size: 18px; color: var(--accent-2); }
+    .learning-card p { font-size: 13px; color: var(--muted); }
+
     label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--accent); }
-    input[type="text"], input[type="email"], select, textarea, input[type="file"]{
+    input[type="text"], input[type="email"], input[type="password"], select, textarea, input[type="file"]{
       width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border);
       background:transparent; color:var(--text); font-family:var(--font-body); font-size:14px;
     }
@@ -245,6 +320,9 @@
         <button class="btn" onclick="showView('home')">Início</button>
         <button class="btn" onclick="showView('artist')">Painel Grafiteiro</button>
         <button class="btn" onclick="showView('client')">Área do Cliente</button>
+        <button class="btn" onclick="showView('learning')">Aprendizagem</button>
+        <button class="btn" onclick="showView('faq')">FAQ</button>
+        <button class="btn" onclick="showView('contact')">Contato</button>
         <button class="btn primary" onclick="showView('plans')">Planos & Créditos</button>
       </nav>
     </header>
@@ -275,7 +353,9 @@
           <div class="card">
             <h2 class="section-title">Galeria de Murais Recentes</h2>
             <p class="subtitle">Confira alguns dos últimos trabalhos realizados por artistas cadastrados.</p>
-            <div class="gallery" id="publicGallery"></div>
+            <div class="carousel-container">
+              <div class="carousel-track" id="publicGallery"></div>
+            </div>
           </div>
 
           <div class="card">
@@ -284,22 +364,27 @@
 
             <div class="services-grid">
               <div class="service">
+                <img src="https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400&auto=format&fit=crop&q=60" alt="Murais">
                 <h3>Murais</h3>
                 <p>Projetos em fachadas e espaços públicos — do orçamento à execução com artistas locais.</p>
               </div>
               <div class="service">
+                <img src="https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=400&auto=format&fit=crop&q=60" alt="Pintura de Telas">
                 <h3>Pintura de Telas</h3>
                 <p>Peças autorais sob encomenda para residências e ambientes comerciais.</p>
               </div>
               <div class="service">
+                <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400&auto=format&fit=crop&q=60" alt="Vestuário">
                 <h3>Vestuário & Objetos</h3>
                 <p>Customização e arte aplicada em roupas, acessórios e peças utilitárias.</p>
               </div>
               <div class="service">
+                <img src="https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=400&auto=format&fit=crop&q=60" alt="Curadoria">
                 <h3>Curadoria</h3>
                 <p>Seleção artística para mostras, eventos e intervenções urbanas.</p>
               </div>
               <div class="service">
+                <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&auto=format&fit=crop&q=60" alt="Workshops">
                 <h3>Workshops</h3>
                 <p>Workshops práticos e teóricos sobre técnicas de muralismo e intervenções urbanas.</p>
               </div>
@@ -341,7 +426,9 @@
               </div>
             </div>
 
-            <div class="gallery" id="portfolioGallery"></div>
+            <div class="carousel-container">
+              <div class="carousel-track" id="portfolioGallery"></div>
+            </div>
           </div>
 
           <div class="card">
@@ -364,8 +451,16 @@
 
               <form id="profileForm" onsubmit="createOrUpdateProfile(event)">
                 <div style="margin-bottom:8px;">
-                  <label for="artistName">Nome Artístico</label>
+                  <label for="artistName">Nome Artístico / Cadastro</label>
                   <input id="artistName" type="text" placeholder="Ex: Nina Graff" required>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <label for="artistEmail">E-mail de Acesso</label>
+                  <input id="artistEmail" type="email" placeholder="seu@email.com" required>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <label for="artistPassword">Senha de Acesso</label>
+                  <input id="artistPassword" type="password" placeholder="Sua senha" required>
                 </div>
                 <div style="margin-bottom:8px;">
                   <label for="artistCpf">CPF (Apenas 1 por cadastro)</label>
@@ -401,6 +496,22 @@
             <p style="color:var(--muted); font-size:13px; margin-bottom:12px;">Utilize seus créditos para desbloquear contatos diretos (WhatsApp) dos clientes.</p>
             <button class="btn primary" style="width:100%" onclick="showView('plans')">Comprar Mais Créditos</button>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARTIST PUBLIC PROFILE VIEW -->
+    <section id="artist-public" class="view">
+      <div class="card" style="max-width: 800px; margin: 0 auto;">
+        <div id="publicProfileContent"></div>
+        <div style="margin-top: 20px;">
+          <h3 style="font-family:var(--font-heading); font-size:20px; color:var(--accent); margin-bottom:12px;">Portfólio do Artista</h3>
+          <div class="carousel-container">
+            <div class="carousel-track" id="publicProfilePortfolio"></div>
+          </div>
+        </div>
+        <div style="margin-top: 20px; text-align: right;">
+          <button class="btn" onclick="showView('home')">Voltar ao Início</button>
         </div>
       </div>
     </section>
@@ -474,7 +585,7 @@
             <div class="card" style="padding:22px;">
               <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Starter</div>
               <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 30 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
-              <ul style="color:var(--muted); margin-bottom:14px;">
+              <ul style="color:var(--muted); margin-bottom:14px; list-style:inside;">
                 <li>Acesso ao Mural de Leads</li>
                 <li>Desbloqueio de Oportunidades</li>
               </ul>
@@ -488,7 +599,7 @@
                 <div class="plan-badge" style="position:absolute; top:-18px; right:12px; background:var(--accent-2); color:#fff; padding:6px 12px; border-radius:12px; font-weight:800; font-size:12px;">Mais Popular</div>
                 <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Pro</div>
                 <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 50 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
-                <ul style="color:var(--muted); margin-bottom:14px;">
+                <ul style="color:var(--muted); margin-bottom:14px; list-style:inside;">
                   <li>Maior Saldo de Créditos</li>
                   <li>Destaque no Mural do Cliente</li>
                 </ul>
@@ -501,12 +612,74 @@
             <div class="card" style="padding:22px;">
               <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Ouro</div>
               <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 200 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
-              <ul style="color:var(--muted); margin-bottom:14px;">
+              <ul style="color:var(--muted); margin-bottom:14px; list-style:inside;">
                 <li>Acesso Ilimitado a Leads</li>
                 <li>Selo de Artista Verificado</li>
               </ul>
               <a href="https://mpago.la/2n8ok9A" target="_blank" rel="noopener" class="btn primary" style="width:100%;">Comprar por R$ 200</a>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEARNING SECTION -->
+    <section id="learning" class="view">
+      <div class="card">
+        <h2 class="section-title">Aprendizagem Criativa</h2>
+        <p class="subtitle">Conteúdos didáticos e estratégias para auxiliar artistas urbanos a terem mais êxito no fechamento de contratos.</p>
+        
+        <div class="learning-grid">
+          <div class="learning-card">
+            <h3>Como Orçar um Mural</h3>
+            <p>Aprenda a calcular seus custos considerando metragem, complexidade do traço, logística e materiais no Rio de Janeiro.</p>
+          </div>
+          <div class="learning-card">
+            <h3>Portfólio que Converte</h3>
+            <p>Descubra quais fotos de murais e processos de pintura atraem mais a atenção de arquitetos e clientes corporativos.</p>
+          </div>
+          <div class="learning-card">
+            <h3>Negociação com Clientes</h3>
+            <p>Dicas práticas de comunicação para passar profissionalismo, justificar seu cachê artístico e fechar contratos com segurança.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ SECTION -->
+    <section id="faq" class="view">
+      <div class="card">
+        <h2 class="section-title">Perguntas Frequentes (FAQ)</h2>
+        <p class="subtitle">Tire suas dúvidas sobre a logística, prazos e funcionamento da plataforma.</p>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">Como funciona a contratação de um artista? <span>+</span></button>
+            <div class="faq-answer">O solicitante preenche os dados da parede e detalhes do projeto. Os artistas cadastrados visualizam o chamado, e os interessados utilizam créditos para desbloquear o contato direto via WhatsApp.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">Qual é a logística para execução dos murais no Rio de Janeiro? <span>+</span></button>
+            <div class="faq-answer">A curadoria e o agendamento ocorrem de forma local. O artista e o cliente alinham diretamente a preparação da parede, fornecimento de tintas e cronograma de execução.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">Como os artistas recebem os orçamentos? <span>+</span></button>
+            <div class="faq-answer">Todos os pedidos ficam disponíveis em tempo real no Mural de Leads dentro do Painel do Grafiteiro.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="view">
+      <div class="card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+        <h2 class="section-title">Contato Oficial</h2>
+        <p class="subtitle">Fale diretamente com a equipe da Grafiterj.</p>
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 20px; align-items: center;">
+          <div style="font-size: 15px;">
+            <strong>Instagram:</strong> <a href="https://instagram.com/graffiti_rj" target="_blank" rel="noopener" style="color:var(--accent-2); font-weight:600; text-decoration:none;">@graffiti_rj</a>
+          </div>
+          <div style="font-size: 15px;">
+            <strong>E-mail de Suporte:</strong> <a href="mailto:graffitieminteriores@gmail.com" style="color:var(--accent-2); font-weight:600; text-decoration:none;">graffitieminteriores@gmail.com</a>
           </div>
         </div>
       </div>
@@ -576,10 +749,14 @@
       }
     }
 
-    function showView(viewId) {
+    function showView(viewId, param) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       const activeView = document.getElementById(viewId);
       if (activeView) activeView.classList.add('active');
+      
+      if (viewId === 'artist-public' && param) {
+        renderPublicProfile(param);
+      }
       renderAll();
     }
 
@@ -591,6 +768,14 @@
       renderCredits();
       renderProfilesList();
       renderFeaturedArtists();
+    }
+
+    /* FAQ Toggle */
+    function toggleFaq(btn) {
+      const item = btn.parentElement;
+      item.classList.toggle('active');
+      const span = btn.querySelector('span');
+      span.textContent = item.classList.contains('active') ? '-' : '+';
     }
 
     /* Modal de Termos de Uso */
@@ -641,8 +826,9 @@
       const activeId = loadData(LS.activeProfile, null);
 
       const filtered = activeId ? list.filter(i => (i.ownerId || null) === activeId) : list;
+      const duplicated = filtered.concat(filtered); // Duplicar para loop contínuo perfeito
 
-      container.innerHTML = filtered.map(item => `
+      container.innerHTML = duplicated.map(item => `
         <div class="thumb">
           <img src="${item.src}" alt="${item.title}">
           <div class="meta">${item.title}</div>
@@ -661,14 +847,19 @@
       renderPublicGallery();
     }
 
-    /* Galeria Pública vinculando a Foto ao Nome do Artista */
+    /* Galeria Pública com Carrossel da Direita para a Esquerda */
     function renderPublicGallery() {
       const list = loadData(LS.portfolio, []);
       const profiles = loadData(LS.profiles, []);
       const container = document.getElementById('publicGallery');
 
-      const slice = list.slice(0, 12);
-      container.innerHTML = slice.map(item => {
+      const slice = list.length ? list : [
+        { src: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400', title: 'Mural RJ' },
+        { src: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=400', title: 'Arte Urbana' }
+      ];
+      const duplicated = slice.concat(slice); // Duplicar itens para efeito contínuo
+
+      container.innerHTML = duplicated.map(item => {
         const owner = profiles.find(p => p.id === item.ownerId);
         const artistName = owner ? owner.name : (item.ownerName || 'Artista Grafiterj');
         return `
@@ -678,6 +869,41 @@
           </div>
         `;
       }).join('');
+    }
+
+    /* Perfil Público Específico do Artista */
+    function renderPublicProfile(artistId) {
+      const profiles = loadData(LS.profiles, []);
+      const portfolio = loadData(LS.portfolio, []);
+      const p = profiles.find(item => item.id === artistId);
+      const container = document.getElementById('publicProfileContent');
+      const portfolioContainer = document.getElementById('publicProfilePortfolio');
+
+      if (!p) {
+        container.innerHTML = `<p style="color:var(--muted)">Artista não encontrado.</p>`;
+        portfolioContainer.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+          ${p.photo ? `<img src="${p.photo}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : `<div style="width:80px; height:80px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:24px;">🎨</div>`}
+          <div>
+            <h2 style="font-family:var(--font-heading); font-size:24px; color:var(--accent-2);">${p.name}</h2>
+            <p style="font-size:13px; color:var(--muted);">${p.location} • <strong>Especialidades:</strong> ${p.specialties}</p>
+          </div>
+        </div>
+        <p style="font-size:14px; color:var(--muted); line-height:1.5;">${p.bio}</p>
+      `;
+
+      const artistPortfolio = portfolio.filter(i => i.ownerId === artistId);
+      const duplicated = artistPortfolio.concat(artistPortfolio);
+      portfolioContainer.innerHTML = duplicated.map(item => `
+        <div class="thumb">
+          <img src="${item.src}" alt="${item.title}">
+          <div class="meta">${item.title}</div>
+        </div>
+      `).join('');
     }
 
     /* Budgets / Leads */
@@ -796,7 +1022,7 @@
         const isOwner = myOwnedProfiles.includes(p.id);
         return `
           <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; border-radius:8px; padding:10px; border:1px solid var(--border); background:#fff;">
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
               ${p.photo ? `<img src="${p.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : `<div style="width:36px; height:36px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted);">🎨</div>`}
               <div>
                 <div style="font-weight:700; color:var(--accent-2);">${p.name}</div>
@@ -804,6 +1030,7 @@
               </div>
             </div>
             <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn sm" onclick="showView('artist-public', '${p.id}')">Ver Perfil</button>
               ${activeId === p.id ? `<span style="font-size:11px; color:var(--accent); font-weight:700;">Ativo</span>` : `<button class="btn sm" onclick="selectProfile('${p.id}')">Entrar</button>`}
               ${isOwner ? `
                 <button class="btn sm" onclick="editProfile('${p.id}')">Editar</button>
@@ -830,7 +1057,7 @@
       }
 
       container.innerHTML = `
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
           ${p.photo ? `<img src="${p.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : ``}
           <div>
             <div style="font-weight:800; font-size:16px; color:var(--accent-2);">${p.name}</div>
@@ -846,6 +1073,8 @@
     async function createOrUpdateProfile(e) {
       e.preventDefault();
       const name = document.getElementById('artistName').value.trim();
+      const email = document.getElementById('artistEmail').value.trim();
+      const password = document.getElementById('artistPassword').value.trim();
       const cpf = document.getElementById('artistCpf').value.trim();
       const location = document.getElementById('artistLocation').value.trim();
       const bio = document.getElementById('artistBio').value.trim();
@@ -864,6 +1093,8 @@
       const processSave = (photoData) => {
         const profileData = {
           name,
+          email,
+          password,
           cpf,
           location,
           bio,
@@ -922,6 +1153,8 @@
       
       editingProfileId = id;
       document.getElementById('artistName').value = p.name;
+      document.getElementById('artistEmail').value = p.email || '';
+      document.getElementById('artistPassword').value = p.password || '';
       document.getElementById('artistCpf').value = p.cpf || '';
       document.getElementById('artistLocation').value = p.location;
       document.getElementById('artistBio').value = p.bio;
@@ -956,14 +1189,14 @@
         const sample = portfolio.find(i => i.ownerId === p.id);
         const img = sample ? sample.src : (p.photo || 'https://via.placeholder.com/300x200?text=Sem+Imagem');
         return `
-          <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+          <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
             <div style="width:54px; height:48px; border-radius:8px; overflow:hidden; border:1px solid var(--border);"><img src="${img}" style="width:100%; height:100%; object-fit:cover;"></div>
             <div style="flex:1;">
               <div style="font-weight:700; color:var(--accent-2);">${p.name}</div>
               <div style="font-size:12px; color:var(--muted);">${p.location} • ${p.specialties}</div>
             </div>
             <div>
-              <button class="btn sm" onclick="selectProfile('${p.id}')">Ver</button>
+              <button class="btn sm" onclick="event.stopPropagation(); showView('artist-public', '${p.id}')">Ver</button>
             </div>
           </div>
         `;
@@ -1081,3 +1314,5 @@
   </script>
 </body>
 </html>
+
+              
