@@ -1,11 +1,11 @@
-<!doctype html>
+                  <!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Grafiterj — Curadoria & Arte Urbana</title>
 
-  <!-- Tipografia: Playfair Display (headings) + Inter (corpo) -->
+  <!-- Tipografia: Playfair Display + Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700;900&display=swap" rel="stylesheet">
@@ -15,12 +15,12 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root{
-      --bg: #faf9f6; /* off-white institucional */
+      --bg: #faf9f6;
       --card: #ffffff;
       --muted: #6b7280;
       --text: #0f172a;
-      --accent: #1f2937; /* tom escuro neutro, típico institucional */
-      --accent-2: #c2410c; /* contraste quente para destaque */
+      --accent: #1f2937;
+      --accent-2: #c2410c;
       --border: rgba(15,23,42,0.06);
       --radius-lg: 14px;
       --radius-md: 8px;
@@ -47,7 +47,6 @@
       max-width:var(--max-width);
     }
 
-    /* Header institucional */
     header.app-header{
       display:flex;
       align-items:center;
@@ -105,7 +104,6 @@
     }
     .btn.sm{ padding:6px 10px; font-size:12px; border-radius:8px; }
 
-    /* Layout */
     .view{ display:none; opacity:0; transition:opacity .25s ease; }
     .view.active{ display:block; opacity:1; }
 
@@ -132,7 +130,6 @@
     }
     p.subtitle{ color:var(--muted); font-size:14px; margin-bottom:12px; }
 
-    /* Hero */
     .hero{
       padding:36px 20px;
       border-radius:var(--radius-lg);
@@ -141,9 +138,7 @@
       align-items:center;
       justify-content:space-between;
     }
-    .hero-left{
-      max-width:62%;
-    }
+    .hero-left{ max-width:62%; }
     .hero h2{
       font-family:var(--font-heading);
       font-size:36px;
@@ -155,7 +150,6 @@
 
     .hero-actions{ display:flex; gap:12px; }
 
-    /* Services cards */
     .services-grid{
       display:grid;
       grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
@@ -176,7 +170,6 @@
     .service h3{ font-family:var(--font-heading); font-size:18px; color:var(--accent-2); }
     .service p{ color:var(--muted); font-size:13px; }
 
-    /* Gallery */
     .gallery{ display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:12px; }
     .thumb{ border-radius:10px; overflow:hidden; background:#f3f4f6; border:1px solid var(--border); aspect-ratio:4/3; display:block; position:relative; }
     .thumb img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .35s ease; }
@@ -193,7 +186,6 @@
       backdrop-filter: blur(4px);
     }
 
-    /* Form styles */
     label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--accent); }
     input[type="text"], input[type="email"], select, textarea, input[type="file"]{
       width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border);
@@ -201,7 +193,6 @@
     }
     textarea{ min-height:110px; resize:vertical; }
 
-    /* Lead list */
     .lead-list{ display:flex; flex-direction:column; gap:12px; }
     .lead-item{ background:#fff; border-radius:10px; padding:14px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .status-badge{ font-size:11px; font-weight:700; padding:6px 10px; border-radius:20px; }
@@ -349,10 +340,7 @@
             <p class="subtitle">Crie e selecione seu perfil para publicar portfólio e se conectar a clientes.</p>
 
             <div id="profileArea" style="display:flex; flex-direction:column; gap:12px;">
-              <!-- Perfil ativo exibido aqui -->
               <div id="activeProfileCard" style="padding:10px; border-radius:10px; border:1px solid var(--border); background:#fff;"></div>
-
-              <!-- Lista de perfis -->
               <div id="profilesList" style="display:flex; flex-direction:column; gap:8px;"></div>
 
               <hr style="border:none; border-top:1px dashed var(--border); margin:6px 0;">
@@ -498,8 +486,6 @@
   </div>
 
   <script>
-    /* LÓGICA JAVASCRIPT (estendi o armazenamento para perfis sem quebrar a lógica existente) */
-
     const LS = {
       portfolio: 'gj_portfolio_v2',
       budgets: 'gj_budgets_v2',
@@ -508,9 +494,14 @@
       activeProfile: 'gj_active_profile_v1'
     };
 
-        function loadData(key, defaultValue) {
-      if (key === LS.profiles) return window.profiles || defaultValue;
-      if (key === LS.budgets) return window.buggets || defaultValue;
+    // Leitura priorizando a nuvem (window.profiles e window.buggets)
+    function loadData(key, defaultValue) {
+      if (key === LS.profiles) {
+        return (window.profiles && window.profiles.length) ? window.profiles : defaultValue;
+      }
+      if (key === LS.budgets) {
+        return (window.buggets && window.buggets.length) ? window.buggets : defaultValue;
+      }
       try {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : defaultValue;
@@ -520,41 +511,19 @@
     }
 
     function saveData(key, value) {
-      if (key === LS.budgets) {
-        // Se for um novo orçamento, envia para o Firebase
-        if (Array.isArray(value) && value.length > 0) {
-          const ultimoPedido = value[value.length - 1];
-          if (window.salvarPedidoNoFirebase) {
-            window.salvarPedidoNoFirebase(ultimoPedido);
-          }
-        }
-        return;
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        console.warn("Aviso LocalStorage:", e);
       }
-      
-      if (key === LS.profiles) {
-        // Se for um novo perfil de artista, envia para o Firebase
-        if (Array.isArray(value) && value.length > 0) {
-          const ultimoPerfil = value[value.length - 1];
-          if (window.salvarArtistaNoFirebase) {
-            window.salvarArtistaNoFirebase(ultimoPerfil);
-          }
-        }
-        return;
-      }
-
-      localStorage.setItem(key, JSON.stringify(value));
     }
 
-    // Inicialização de dados
     function initData() {
-      // O leitor em tempo real do Firebase no final da página assume a inicialização dos perfis e pedidos
       if (!localStorage.getItem(LS.credits)) {
         localStorage.setItem(LS.credits, JSON.stringify(5));
       }
     }
 
-
-    // Navegação de Telas
     function showView(viewId) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       const activeView = document.getElementById(viewId);
@@ -562,7 +531,6 @@
       renderAll();
     }
 
-    // Renderização geral
     function renderAll() {
       renderPortfolio();
       renderPublicGallery();
@@ -573,10 +541,7 @@
       renderFeaturedArtists();
     }
 
-    /* -----------------------
-       Portfólio (com suporte a perfis)
-       ----------------------- */
-
+    /* Portfólio */
     function handlePortfolioUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -585,12 +550,11 @@
       reader.onload = function(ev) {
         const portfolio = loadData(LS.portfolio, []);
         const activeProfileId = loadData(LS.activeProfile, null);
-        // preserve lógica: empilha no início da lista
         portfolio.unshift({
           id: Date.now().toString(),
           src: ev.target.result,
           title: file.name,
-          ownerId: activeProfileId // associa ao perfil ativo (se houver)
+          ownerId: activeProfileId
         });
         saveData(LS.portfolio, portfolio);
         renderPortfolio();
@@ -605,7 +569,6 @@
       const container = document.getElementById('portfolioGallery');
       const activeId = loadData(LS.activeProfile, null);
 
-      // Se existir perfil ativo, mostrar apenas itens desse perfil no painel do artista
       const filtered = activeId ? list.filter(i => (i.ownerId || null) === activeId) : list;
 
       container.innerHTML = filtered.map(item => `
@@ -627,7 +590,6 @@
       renderPublicGallery();
     }
 
-    // Galeria pública: mostra as primeiras 6 imagens de todos os perfis
     function renderPublicGallery() {
       const list = loadData(LS.portfolio, []);
       const profiles = loadData(LS.profiles, []);
@@ -646,12 +608,9 @@
       }).join('');
     }
 
-    /* -----------------------
-       Budgets / Leads (mantive lógica original)
-       ----------------------- */
+    /* Budgets / Leads */
     function renderBudgets() {
       const list = loadData(LS.budgets, []);
-      const credits = loadData(LS.credits, 0);
       const container = document.getElementById('budgetsList');
 
       if (!list.length) {
@@ -662,10 +621,10 @@
       container.innerHTML = list.map(item => `
         <div class="lead-item">
           <div>
-            <strong>${item.address}</strong>
-            <p style="font-size:13px; color:var(--muted); margin-top:4px;">${item.desc}</p>
+            <strong>${item.address || 'Rio de Janeiro, RJ'}</strong>
+            <p style="font-size:13px; color:var(--muted); margin-top:4px;">${item.desc || item.descricao || ''}</p>
             <p style="font-size:12px; color:var(--accent-2); margin-top:6px;">
-              ${item.unlocked ? `Contactar: ${item.phone} (${item.client})` : 'Contato bloqueado'}
+              ${item.unlocked ? `Contactar: ${item.phone || item.telefone} (${item.client || item.nome})` : 'Contato bloqueado'}
             </p>
           </div>
           <div>
@@ -697,10 +656,8 @@
       }
     }
 
-    /* -----------------------
-       Cliente: envio de pedido (mantive função original)
-       ----------------------- */
-    function submitRequest(e) {
+    /* Envio de Pedido de Cliente (Gravando na nuvem) */
+    async function submitRequest(e) {
       e.preventDefault();
       const client = document.getElementById('clientName').value;
       const phone = document.getElementById('clientPhone').value;
@@ -708,18 +665,19 @@
       const desc = document.getElementById('desc').value;
 
       const newBudget = {
-        id: Date.now().toString(),
-        client, phone, address, desc,
+        client, 
+        phone, 
+        address, 
+        desc,
         status: 'open',
         unlocked: false
       };
 
-      const list = loadData(LS.budgets, []);
-      list.unshift(newBudget);
-      saveData(LS.budgets, list);
+      if (window.salvarPedidoNoFirebase) {
+        await window.salvarPedidoNoFirebase(newBudget);
+      }
 
       document.getElementById('requestForm').reset();
-      alert('Seu orçamento foi enviado com sucesso! Grafiteiros da área poderão entrar em contato.');
       renderAll();
     }
 
@@ -730,15 +688,13 @@
       container.innerHTML = list.map(item => `
         <div class="lead-item" style="flex-direction:column; align-items:flex-start;">
           <span class="status-badge open">Ativo</span>
-          <strong style="margin-top:6px;">${item.address}</strong>
-          <p style="font-size:12px; color:var(--muted);">${item.desc}</p>
+          <strong style="margin-top:6px;">${item.address || 'Rio de Janeiro'}</strong>
+          <p style="font-size:12px; color:var(--muted);">${item.desc || ''}</p>
         </div>
       `).join('');
     }
 
-    /* -----------------------
-       Créditos e Perfil ativo
-       ----------------------- */
+    /* Créditos */
     function renderCredits() {
       const credits = loadData(LS.credits, 0);
       document.getElementById('creditsDisplay').textContent = `${credits} Crédito${credits !== 1 ? 's' : ''}`;
@@ -746,9 +702,7 @@
       renderActiveProfileCard();
     }
 
-    /* -----------------------
-       Perfis de artista: criação/seleção/remoção
-       ----------------------- */
+    /* Perfis de Artistas (Gravando na nuvem) */
     function renderProfilesList() {
       const profiles = loadData(LS.profiles, []);
       const activeId = loadData(LS.activeProfile, null);
@@ -790,25 +744,21 @@
       `;
     }
 
-    function createOrUpdateProfile(e) {
+    async function createOrUpdateProfile(e) {
       e.preventDefault();
       const name = document.getElementById('artistName').value.trim();
       const location = document.getElementById('artistLocation').value.trim();
       const bio = document.getElementById('artistBio').value.trim();
       const specialties = document.getElementById('artistSpec').value.trim();
 
-      const profiles = loadData(LS.profiles, []);
-      // se houver edição via hidden field no futuro, aqui poderíamos atualizar. Por hora sempre cria novo.
-      const newProfile = {
-        id: Date.now().toString(),
-        name, location, bio, specialties
-      };
-      profiles.unshift(newProfile);
-      saveData(LS.profiles, profiles);
-      saveData(LS.activeProfile, newProfile.id); // seleciona automaticamente
+      const newProfile = { name, location, bio, specialties };
+
+      if (window.salvarArtistaNoFirebase) {
+        await window.salvarArtistaNoFirebase(newProfile);
+      }
+
       document.getElementById('profileForm').reset();
       renderAll();
-      alert('Perfil salvo e selecionado.');
     }
 
     function clearProfileForm() {
@@ -819,11 +769,9 @@
       saveData(LS.activeProfile, id);
       renderAll();
       showView('artist');
-      alert('Perfil selecionado.');
     }
 
     function editProfile(id) {
-      // carrega dados no form para edição simples (substitui criação)
       const profiles = loadData(LS.profiles, []);
       const p = profiles.find(pp => pp.id === id);
       if (!p) return alert('Perfil não encontrado.');
@@ -831,25 +779,17 @@
       document.getElementById('artistLocation').value = p.location;
       document.getElementById('artistBio').value = p.bio;
       document.getElementById('artistSpec').value = p.specialties;
-      // ao salvar, criaremos um novo registro; se preferir editar in-place, adaptar aqui
     }
 
     function deleteProfile(id) {
-      if (!confirm('Excluir perfil? Isso não removerá imagens, mas as desvinculará desse perfil.')) return;
+      if (!confirm('Excluir perfil?')) return;
       let profiles = loadData(LS.profiles, []);
       profiles = profiles.filter(p => p.id !== id);
       saveData(LS.profiles, profiles);
-      const activeId = loadData(LS.activeProfile, null);
-      if (activeId === id) {
-        // remover seleção
-        if (profiles.length) saveData(LS.activeProfile, profiles[0].id); else localStorage.removeItem(LS.activeProfile);
-      }
       renderAll();
     }
 
-    /* -----------------------
-       Featured artists (Home)
-       ----------------------- */
+    /* Destaques (Home) */
     function renderFeaturedArtists() {
       const profiles = loadData(LS.profiles, []);
       const portfolio = loadData(LS.portfolio, []);
@@ -858,7 +798,6 @@
         container.innerHTML = '<div style="color:var(--muted)">Nenhum artista cadastrado ainda.</div>';
         return;
       }
-      // Mostrar até 4 perfis com amostra do portfólio
       const html = profiles.slice(0,4).map(p => {
         const sample = portfolio.find(i => i.ownerId === p.id);
         const img = sample ? sample.src : 'https://via.placeholder.com/300x200?text=Sem+Imagem';
@@ -877,9 +816,12 @@
       }).join('');
       container.innerHTML = html;
     }
+
+    // Inicializar na carga da página
+    initData();
   </script>
 
-  <!-- SDKs do Firebase (App + Firestore) -->
+  <!-- SDKs do Firebase (Módulo de conexão direta) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -893,29 +835,26 @@
       appId: "1:921737954297:web:a586c06ed3f388e8863328"
     };
 
-    // Inicializa o Firebase e o Banco
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 1. PUXA OS ARTISTAS EM TEMPO REAL
+    // Escuta em tempo real dos Artistas
     onSnapshot(collection(db, "artistas"), (snapshot) => {
-      window.profiles = [];
-      snapshot.forEach((doc) => {
-        window.profiles.push({ id: doc.id, ...doc.data() });
-      });
+      const list = [];
+      snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+      window.profiles = list;
       if (typeof renderAll === 'function') renderAll();
     });
 
-    // 2. PUXA OS PEDIDOS DOS CLIENTES EM TEMPO REAL
+    // Escuta em tempo real dos Pedidos
     onSnapshot(collection(db, "pedidos"), (snapshot) => {
-      window.buggets = [];
-      snapshot.forEach((doc) => {
-        window.buggets.push({ id: doc.id, ...doc.data() });
-      });
+      const list = [];
+      snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+      window.buggets = list;
       if (typeof renderAll === 'function') renderAll();
     });
 
-    // 3. FUNÇÃO PARA O CLIENTE SALVAR NOVO PEDIDO DE ORÇAMENTO
+    // Salvar Pedido no Firestore
     window.salvarPedidoNoFirebase = async function(dadosPedido) {
       try {
         await addDoc(collection(db, "pedidos"), {
@@ -924,42 +863,24 @@
         });
         alert("Solicitação de orçamento enviada com sucesso!");
       } catch (e) {
-        console.error("Erro ao salvar pedido: ", e);
-        alert("Erro ao enviar pedido. Tente novamente.");
+        console.error("Erro no Firebase (Pedidos):", e);
+        alert("Erro ao enviar pedido para a nuvem.");
       }
     };
 
-    // 4. FUNÇÃO PARA O ARTISTA SALVAR PERFIL/FOTO
+    // Salvar Artista no Firestore
     window.salvarArtistaNoFirebase = async function(dadosArtista) {
       try {
         await addDoc(collection(db, "artistas"), {
           ...dadosArtista,
           criadoEm: new Date().toISOString()
         });
-        alert("Perfil do artista salvo com sucesso!");
+        alert("Perfil de artista cadastrado com sucesso!");
       } catch (e) {
-        console.error("Erro ao salvar perfil: ", e);
-        alert("Erro ao salvar perfil.");
+        console.error("Erro no Firebase (Artistas):", e);
+        alert("Erro ao salvar perfil do artista na nuvem.");
       }
     };
-    function loadData(key, defaultValue) {
-  // Se o site pedir perfis, entrega a lista que veio do Firebase
-  if (key === LS.profiles) {
-    return (window.profiles && window.profiles.length) ? window.profiles : defaultValue;
-  }
-  // Se o site pedir orçamentos, entrega a lista que veio do Firebase
-  if (key === LS.budgets) {
-    return (window.buggets && window.buggets.length) ? window.buggets : defaultValue;
-  }
-  // Para todo o resto, mantém o comportamento padrão
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (e) {
-    return defaultValue;
-  }
-}
-
   </script>
+</body>
 </html>
-
