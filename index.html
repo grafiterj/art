@@ -942,6 +942,24 @@
         alert("Erro ao salvar perfil.");
       }
     };
+    function loadData(key, defaultValue) {
+  // Se o site pedir perfis, entrega a lista que veio do Firebase
+  if (key === LS.profiles) {
+    return (window.profiles && window.profiles.length) ? window.profiles : defaultValue;
+  }
+  // Se o site pedir orçamentos, entrega a lista que veio do Firebase
+  if (key === LS.budgets) {
+    return (window.buggets && window.buggets.length) ? window.buggets : defaultValue;
+  }
+  // Para todo o resto, mantém o comportamento padrão
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (e) {
+    return defaultValue;
+  }
+}
+
   </script>
 </html>
 
