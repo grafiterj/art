@@ -355,10 +355,51 @@
     }
   </style>
 
-  <!-- Firebase SDKs (Compat / Modular via CDN) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <!-- Firebase SDKs (Modular ESM via CDN) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, getDoc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Configuração Oficial do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMTNTizh8Sm6Fe-8p-KZxDAqYAdQGnDfc",
+      authDomain: "grafiterj.firebaseapp.com",
+      projectId: "grafiterj",
+      storageBucket: "grafiterj.firebasestorage.app",
+      messagingSenderId: "921737954297",
+      appId: "1:921737954297:web:a586c06ed3f388e8863328"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Expondo globalmente para as funções do app
+    window.firebaseApp = app;
+    window.auth = auth;
+    window.db = db;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    window.signOut = signOut;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.collection = collection;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.addDoc = addDoc;
+    window.updateDoc = updateDoc;
+    window.deleteDoc = deleteDoc;
+    window.getDoc = getDoc;
+    window.onSnapshot = onSnapshot;
+    window.query = query;
+    window.where = where;
+    window.getDocs = getDocs;
+
+    // Inicialização da Aplicação após carregar os módulos
+    document.addEventListener("DOMContentLoaded", () => {
+      initAppListeners();
+    });
+  </script>
 </head>
 <body>
 
@@ -804,28 +845,51 @@
 
   <!-- SCRIPT DE LÓGICA E INTEGRAÇÃO FIREBASE -->
   <script>
-    // Configuração Firebase (Compat / Modular)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDummyKeyForGrafiterjPlatform2026",
-      authDomain: "grafiterj-platform.firebaseapp.com",
-      projectId: "grafiterj-platform",
-      storageBucket: "grafiterj-platform.appspot.com",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:abcdef1234567890"
-    };
-
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
     // Estado Global da Aplicação
     let currentArtistId = null;
     let currentUserEmailVal = null;
     let artistsCache = [];
     let portfolioCache = [];
     let budgetsCache = [];
+
+    // Inicialização dos Listeners do Firebase (chamado após o carregamento dos módulos)
+    function initAppListeners() {
+      // Firebase Auth State Listener
+      window.onAuthStateChanged(window.auth, async (user) => {
+        const loggedOutView = document.getElementById('loggedOutView');
+        const loggedInView = document.getElementById('loggedInView');
+        const currentUserEmail = document.getElementById('currentUserEmail');
+        const portfolioUploadContainer = document.getElementById('portfolioUploadContainer');
+
+        if (user) {
+          currentUserEmailVal = user.email;
+          if(loggedOutView) loggedOutView.style.display = 'none';
+          if(loggedInView) loggedInView.style.display = 'block';
+          if(currentUserEmail) currentUserEmail.textContent = user.email;
+          if(portfolioUploadContainer) portfolioUploadContainer.style.display = 'flex';
+
+          // Buscar documento do artista vinculado a este e-mail ou UID
+          try {
+            const q = window.query(window.collection(window.db, 'artists'), window.where('email', '==', user.email));
+            const snap = await window.getDocs(q);
+            if(!snap.empty) {
+              currentArtistId = snap.docs[0].id;
+            } else {
+              currentArtistId = user.uid;
+            }
+          } catch(err) {
+            currentArtistId = user.uid;
+          }
+        } else {
+          currentUserEmailVal = null;
+          if(loggedOutView) loggedOutView.style.display = 'block';
+          if(loggedInView) loggedInView.style.display = 'none';
+          if(portfolioUploadContainer) portfolioUploadContainer.style.display = 'none';
+          currentArtistId = null;
+        }
+        loadCloudData();
+      });
+    }
 
     // Navegação de Views
     function showView(viewId) {
@@ -885,41 +949,6 @@
       return true;
     }
 
-    // Firebase Auth State Listener
-    auth.onAuthStateChanged(async (user) => {
-      const loggedOutView = document.getElementById('loggedOutView');
-      const loggedInView = document.getElementById('loggedInView');
-      const currentUserEmail = document.getElementById('currentUserEmail');
-      const portfolioUploadContainer = document.getElementById('portfolioUploadContainer');
-
-      if (user) {
-        currentUserEmailVal = user.email;
-        if(loggedOutView) loggedOutView.style.display = 'none';
-        if(loggedInView) loggedInView.style.display = 'block';
-        if(currentUserEmail) currentUserEmail.textContent = user.email;
-        if(portfolioUploadContainer) portfolioUploadContainer.style.display = 'flex';
-
-        // Buscar documento do artista vinculado a este e-mail ou UID
-        try {
-          const snap = await db.collection('artists').where('email', '==', user.email).get();
-          if(!snap.empty) {
-            currentArtistId = snap.docs[0].id;
-          } else {
-            currentArtistId = user.uid;
-          }
-        } catch(err) {
-          currentArtistId = user.uid;
-        }
-      } else {
-        currentUserEmailVal = null;
-        if(loggedOutView) loggedOutView.style.display = 'block';
-        if(loggedInView) loggedInView.style.display = 'none';
-        if(portfolioUploadContainer) portfolioUploadContainer.style.display = 'none';
-        currentArtistId = null;
-      }
-      loadCloudData();
-    });
-
     // Login por E-mail e Senha
     async function loginArtist() {
       const email = document.getElementById('loginEmail').value.trim();
@@ -929,7 +958,7 @@
         return;
       }
       try {
-        await auth.signInWithEmailAndPassword(email, pass);
+        await window.signInWithEmailAndPassword(window.auth, email, pass);
         alert('Login efetuado com sucesso!');
         loadCloudData();
       } catch (err) {
@@ -940,7 +969,7 @@
     // Logout
     async function logoutArtist() {
       try {
-        await auth.signOut();
+        await window.signOut(window.auth);
         currentArtistId = null;
         alert('Você saiu da sua conta.');
         loadCloudData();
@@ -951,8 +980,10 @@
 
     // Carregar dados do Firestore em tempo real
     function loadCloudData() {
+      if (!window.db) return;
+
       // Artistas
-      db.collection('artists').onSnapshot(snapshot => {
+      window.onSnapshot(window.collection(window.db, 'artists'), snapshot => {
         artistsCache = [];
         snapshot.forEach(doc => {
           artistsCache.push({ id: doc.id, ...doc.data() });
@@ -964,7 +995,7 @@
       }, err => console.log('Erro artistas:', err));
 
       // Portfólio (Fotos)
-      db.collection('portfolio').onSnapshot(snapshot => {
+      window.onSnapshot(window.collection(window.db, 'portfolio'), snapshot => {
         portfolioCache = [];
         snapshot.forEach(doc => {
           portfolioCache.push({ id: doc.id, ...doc.data() });
@@ -974,7 +1005,7 @@
       }, err => console.log('Erro portfolio:', err));
 
       // Leads / Orçamentos
-      db.collection('budgets').onSnapshot(snapshot => {
+      window.onSnapshot(window.collection(window.db, 'budgets'), snapshot => {
         budgetsCache = [];
         snapshot.forEach(doc => {
           budgetsCache.push({ id: doc.id, ...doc.data() });
@@ -1027,14 +1058,14 @@
       try {
         let uid = currentArtistId;
         // Se não estiver logado via Auth, tenta criar usuário Auth
-        if(!auth.currentUser) {
+        if(!window.auth.currentUser) {
           try {
-            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            const cred = await window.createUserWithEmailAndPassword(window.auth, email, password);
             uid = cred.user.uid;
           } catch(authErr) {
             // Se o e-mail já existe no auth, tenta logar
             try {
-              const cred = await auth.signInWithEmailAndPassword(email, password);
+              const cred = await window.signInWithEmailAndPassword(window.auth, email, password);
               uid = cred.user.uid;
             } catch(loginErr) {
               alert('Erro de Autenticação: ' + authErr.message);
@@ -1056,7 +1087,7 @@
           updatedAt: new Date().toISOString()
         };
 
-        await db.collection('artists').doc(uid).set(artistData, { merge: true });
+        await window.setDoc(window.doc(window.db, 'artists', uid), artistData, { merge: true });
         currentArtistId = uid;
         alert('Perfil e conta salvos com sucesso na nuvem!');
         clearProfileForm();
@@ -1167,7 +1198,7 @@
       reader.onload = async function(evt) {
         const imageUrl = evt.target.result;
         try {
-          await db.collection('portfolio').add({
+          await window.addDoc(window.collection(window.db, 'portfolio'), {
             artistId: currentArtistId,
             author: authorName,
             url: imageUrl,
@@ -1183,13 +1214,13 @@
     }
 
     async function deletePortfolioItem(id, artistId) {
-      if(!auth.currentUser && currentArtistId !== artistId) {
+      if(!window.auth.currentUser && currentArtistId !== artistId) {
         alert('Apenas o dono desta conta logada pode excluir fotos do portfólio.');
         return;
       }
       if(confirm('Deseja realmente excluir esta obra do portfólio?')) {
         try {
-          await db.collection('portfolio').doc(id).delete();
+          await window.deleteDoc(window.doc(window.db, 'portfolio', id));
           alert('Obra excluída com sucesso.');
         } catch(err) {
           alert('Erro ao excluir: ' + err.message);
@@ -1210,7 +1241,7 @@
       }
 
       myWorks.forEach(item => {
-        const canDelete = auth.currentUser || item.artistId === currentArtistId;
+        const canDelete = window.auth.currentUser || item.artistId === currentArtistId;
         const div = document.createElement('div');
         div.className = 'thumb';
         div.innerHTML = `
@@ -1328,7 +1359,7 @@
 
     async function saveBudgetRecord(name, phone, address, desc, wallPhotoUrl) {
       try {
-        await db.collection('budgets').add({
+        await window.addDoc(window.collection(window.db, 'budgets'), {
           clientName: name,
           clientPhone: phone,
           address: address,
@@ -1410,18 +1441,18 @@
       }
 
       try {
-        const budgetRef = db.collection('budgets').doc(budgetId);
-        const doc = await budgetRef.get();
-        if(!doc.exists) return;
-        const data = doc.data();
+        const budgetRef = window.doc(window.db, 'budgets', budgetId);
+        const docSnap = await window.getDoc(budgetRef);
+        if(!docSnap.exists()) return;
+        const data = docSnap.data();
         let unlockedBy = data.unlockedBy || [];
         if(!unlockedBy.includes(currentArtistId)) {
           unlockedBy.push(currentArtistId);
-          await budgetRef.update({ unlockedBy: unlockedBy });
+          await window.updateDoc(budgetRef, { unlockedBy: unlockedBy });
 
           if(!hasUnlimited) {
             credits -= 1;
-            await db.collection('artists').doc(currentArtistId).update({ credits: credits });
+            await window.updateDoc(window.doc(window.db, 'artists', currentArtistId), { credits: credits });
           }
           alert('Contato desbloqueado com sucesso!');
         }
@@ -1457,7 +1488,6 @@
 
     // Simulador de Confirmação e Adição de Créditos / Planos (6 Meses)
     async function addCredits(amount) {
-      // Função acionada ao clicar nos links de pagamento
       console.log('Link de pagamento acionado para valor:', amount);
     }
 
@@ -1472,19 +1502,19 @@
       if(!artist) return;
 
       try {
-        const artistRef = db.collection('artists').doc(currentArtistId);
+        const artistRef = window.doc(window.db, 'artists', currentArtistId);
         if(planType === 'Unlimited' || amount === 200) {
           // Validade de 6 meses
           const now = new Date();
           now.setMonth(now.getMonth() + 6);
-          await artistRef.update({
+          await window.updateDoc(artistRef, {
             unlimitedExpires: now.toISOString()
           });
           alert('Pagamento simulado aprovado com sucesso! Plano Ilimitado de 6 meses ativado.');
         } else {
           const currentCredits = artist.credits || 0;
           const newCredits = currentCredits + creditsToAdd;
-          await artistRef.update({
+          await window.updateDoc(artistRef, {
             credits: newCredits
           });
           alert(`Pagamento simulado aprovado com sucesso! +${creditsToAdd} créditos adicionados ao seu perfil.`);
@@ -1495,11 +1525,6 @@
         alert('Erro ao atualizar créditos: ' + err.message);
       }
     }
-
-    // Inicialização da Aplicação
-    window.onload = function() {
-      loadCloudData();
-    };
   </script>
 </body>
 </html>
