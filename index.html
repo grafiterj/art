@@ -395,8 +395,50 @@
     window.where = where;
     window.getDocs = getDocs;
 
-    // Inicialização da Aplicação após carregar os módulos
-    document.addEventListener("DOMContentLoaded", () => {
+    // Inicialização da Aplicação após carregar os módulos e verificação de retorno de pagamento
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Verificação automática de retorno do Mercado Pago na URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const externalRef = urlParams.get('external_reference');
+      const paymentStatus = urlParams.get('collection_status') || urlParams.get('status');
+
+      if ((paymentStatus === 'approved' || paymentStatus === 'success') && externalRef) {
+        const [artistId, credits, planType] = externalRef.split('_');
+
+        if (artistId && window.db) {
+          try {
+            const artistRef = doc(db, 'artists', artistId);
+            const artistSnap = await getDoc(artistRef);
+
+            if (artistSnap.exists()) {
+              const currentData = artistSnap.data();
+              
+              if (planType === 'unlimited') {
+                const expiresAt = new Date();
+                expiresAt.setMonth(expiresAt.getMonth() + 6);
+
+                await updateDoc(artistRef, {
+                  unlimitedExpires: expiresAt.toISOString()
+                });
+                alert('Pagamento aprovado! Seu Plano Ilimitado de 6 meses já está ativo.');
+              } else {
+                const currentCredits = currentData.credits || 0;
+                const newTotal = currentCredits + Number(credits);
+
+                await updateDoc(artistRef, {
+                  credits: newTotal
+                });
+                alert(`Pagamento aprovado! ${credits} créditos adicionados ao seu saldo.`);
+              }
+              
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          } catch (err) {
+            console.error('Erro ao atualizar saldo automático:', err);
+          }
+        }
+      }
+
       initAppListeners();
     });
   </script>
@@ -865,7 +907,6 @@
           if(currentUserEmail) currentUserEmail.textContent = user.email;
           if(portfolioUploadContainer) portfolioUploadContainer.style.display = 'flex';
 
-          // Buscar documento do artista vinculado a este e-mail ou UID
           try {
             const q = window.query(window.collection(window.db, 'artists'), window.where('email', '==', user.email));
             const snap = await window.getDocs(q);
@@ -979,7 +1020,6 @@
     function loadCloudData() {
       if (!window.db) return;
 
-      // Artistas
       window.onSnapshot(window.collection(window.db, 'artists'), snapshot => {
         artistsCache = [];
         snapshot.forEach(doc => {
@@ -991,7 +1031,6 @@
         renderBudgets();
       }, err => console.log('Erro artistas:', err));
 
-      // Portfólio (Fotos na Nuvem Firestore)
       window.onSnapshot(window.collection(window.db, 'portfolio'), snapshot => {
         portfolioCache = [];
         snapshot.forEach(doc => {
@@ -1001,7 +1040,6 @@
         renderPublicGallery();
       }, err => console.log('Erro portfolio:', err));
 
-      // Leads / Orçamentos
       window.onSnapshot(window.collection(window.db, 'budgets'), snapshot => {
         budgetsCache = [];
         snapshot.forEach(doc => {
@@ -1029,7 +1067,6 @@
         return;
       }
 
-      // Verificar CPF duplicado em outros cadastros
       const cpfExists = artistsCache.find(a => a.cpf === cpf && a.id !== currentArtistId);
       if(cpfExists) {
         alert('Este CPF já está cadastrado em outro perfil.');
@@ -1054,13 +1091,11 @@
     async function saveArtistRecord(name, email, password, cpf, location, bio, spec, photoUrl) {
       try {
         let uid = currentArtistId;
-        // Se não estiver logado via Auth, tenta criar usuário Auth
         if(!window.auth.currentUser) {
           try {
             const cred = await window.createUserWithEmailAndPassword(window.auth, email, password);
             uid = cred.user.uid;
           } catch(authErr) {
-            // Se o e-mail já existe no auth, tenta logar
             try {
               const cred = await window.signInWithEmailAndPassword(window.auth, email, password);
               uid = cred.user.uid;
@@ -1105,7 +1140,6 @@
       document.getElementById('artistPhotoInput').value = '';
     }
 
-    // Renderizar Lista de Perfis e Perfil Ativo
     function renderArtistsList() {
       const container = document.getElementById('profilesList');
       if(!container) return;
@@ -1159,7 +1193,6 @@
         const credits = artist.credits || 0;
         if(creditsDisplay) creditsDisplay.textContent = credits + ' Créditos';
 
-        // Validação de Plano Ilimitado (6 Meses)
         if(artist.unlimitedExpires) {
           const expDate = new Date(artist.unlimitedExpires);
           const now = new Date();
@@ -1179,7 +1212,6 @@
       }
     }
 
-    // Gerenciamento de Portfólio em Nuvem (Firestore) com Proteção por Autenticação
     async function handlePortfolioUpload(event) {
       if(!currentArtistId || !window.auth.currentUser) {
         alert('Você precisa estar logado com e-mail e senha para adicionar fotos ao portfólio em nuvem.');
@@ -1250,7 +1282,6 @@
       });
     }
 
-    // Galeria Pública (Home) - Puxando da Nuvem
     function renderPublicGallery() {
       const track = document.getElementById('publicGallery');
       if(!track) return;
@@ -1332,7 +1363,6 @@
       showView('artist-public');
     }
 
-    // Solicitação de Orçamentos (Leads)
     async function submitRequest(event) {
       event.preventDefault();
       const name = document.getElementById('clientName').value.trim();
@@ -1390,7 +1420,6 @@
         const unlockedList = budget.unlockedBy || [];
         const isUnlocked = currentArtistId && unlockedList.includes(currentArtistId);
 
-        // Verificar se plano ilimitado de 6 meses está ativo
         let hasUnlimited = false;
         if(currentArtist && currentArtist.unlimitedExpires) {
           if(new Date(currentArtist.unlimitedExpires) > new Date()) hasUnlimited = true;
@@ -1424,7 +1453,6 @@
       const artist = artistsCache.find(a => a.id === currentArtistId);
       if(!artist) return;
 
-      // Verificar plano ilimitado de 6 meses
       let hasUnlimited = false;
       if(artist.unlimitedExpires && new Date(artist.unlimitedExpires) > new Date()) {
         hasUnlimited = true;
@@ -1458,7 +1486,6 @@
       }
     }
 
-    // Chamados do Cliente
     function renderClientTickets() {
       const container = document.getElementById('clientTickets');
       if(!container) return;
@@ -1483,7 +1510,7 @@
       });
     }
 
-    // Fluxo de Pagamento Real via Gateway (Mercado Pago / Webhook)
+    // Função de Checkout Integrada com Mercado Pago e Firebase
     async function initiateCheckout(planType, price, creditsToAdd) {
       if(!currentArtistId) {
         alert('Por favor, selecione ou entre com um perfil de artista no Painel Grafiteiro antes de efetuar uma compra.');
@@ -1491,30 +1518,21 @@
         return;
       }
 
-      const artist = artistsCache.find(a => a.id === currentArtistId);
-      if(!artist) return;
+      // Substitua os links abaixo pelas URLs de Links de Pagamento reais geradas no painel do Mercado Pago
+      let baseURL = '';
+      if (planType === 'starter') baseURL = 'https://mpago.la/SEU_LINK_STARTER';
+      if (planType === 'pro') baseURL = 'https://mpago.la/SEU_LINK_PRO';
+      if (planType === 'unlimited') baseURL = 'https://mpago.la/SEU_LINK_ILIMITADO';
 
-      try {
-        // 1. Criar um registro de pedido com status "pending" no Firestore para processamento seguro via Webhook
-        const orderRef = await window.addDoc(window.collection(window.db, 'orders'), {
-          artistId: currentArtistId,
-          artistEmail: artist.email || currentUserEmailVal,
-          planType: planType,
-          amount: price,
-          credits: creditsToAdd,
-          status: 'pending',
-          createdAt: new Date().toISOString()
-        });
-
-        // Configuração recomendada para back_urls e auto_return no backend com Mercado Pago:
-        // back_urls: { success: "https://seusite.com/sucesso.html", pending: "...", failure: "..." }
-        // auto_return: "approved"
-
-        alert(`Intenção de compra registrada com ID: ${orderRef.id}.\n\nPara pagamentos reais, configure a API de Preferência de Pagamento do Mercado Pago no seu backend com Webhook para atualizar o saldo automaticamente no Firestore após a aprovação.`);
-
-      } catch(err) {
-        alert('Erro ao iniciar o checkout: ' + err.message);
+      if (!baseURL || baseURL.includes('SEU_LINK')) {
+        alert('Por favor, configure os links de pagamento do Mercado Pago na função initiateCheckout.');
+        return;
       }
+
+      // Anexa o external_reference com os dados do artista e créditos direto na URL de redirecionamento
+      const checkoutURL = `${baseURL}?external_reference=${currentArtistId}_${creditsToAdd}_${planType}`;
+      
+      window.location.href = checkoutURL;
     }
   </script>
 </body>
