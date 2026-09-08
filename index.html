@@ -692,7 +692,7 @@
     <section id="plans" class="view">
       <div class="card" style="text-align:center; padding:36px 20px;">
         <h2 class="section-title">Planos & Pacotes de Créditos</h2>
-        <p class="subtitle" style="max-width:700px; margin:0 auto 20px;">Adquira créditos para liberar contatos diretos de clientes interessados no seu trabalho.</p>
+        <p class="subtitle" style="max-width:700px; margin:0 auto 20px;">Adquira créditos para liberar contatos diretos de clientes interessados no seu trabalho através do nosso gateway de pagamento seguro.</p>
 
         <div class="grid" style="grid-template-columns: repeat(12,1fr); gap:16px;">
           <div class="col-4">
@@ -700,11 +700,10 @@
               <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Starter</div>
               <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 30 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
               <ul style="color:var(--muted); margin-bottom:14px; list-style:inside; text-align:left;">
+                <li>5 Créditos para Leads</li>
                 <li>Acesso ao Mural de Leads</li>
-                <li>Desbloqueio de Oportunidades</li>
               </ul>
-              <a href="https://mpago.la/1vucjSV" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center; margin-bottom:8px;" onclick="addCredits(30)">Comprar por R$ 30</a>
-              <button class="btn sm" style="width:100%; justify-content:center;" onclick="simulatePayment(30, 5, 'Starter')">Simular Confirmação PIX/MP</button>
+              <button class="btn primary" style="width:100%; justify-content:center;" onclick="initiateCheckout('starter', 30, 5)">Comprar Pacote Starter</button>
             </div>
           </div>
 
@@ -715,11 +714,10 @@
                 <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Pro</div>
                 <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 50 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
                 <ul style="color:var(--muted); margin-bottom:14px; list-style:inside; text-align:left;">
-                  <li>Maior Saldo de Créditos</li>
+                  <li>10 Créditos para Leads</li>
                   <li>Destaque no Mural do Cliente</li>
                 </ul>
-                <a href="https://mpago.la/2LV6ctf" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center; margin-bottom:8px;" onclick="addCredits(50)">Comprar por R$ 50</a>
-                <button class="btn sm" style="width:100%; justify-content:center;" onclick="simulatePayment(50, 10, 'Pro')">Simular Confirmação PIX/MP</button>
+                <button class="btn primary" style="width:100%; justify-content:center;" onclick="initiateCheckout('pro', 50, 10)">Comprar Pacote Pro</button>
               </div>
             </div>
           </div>
@@ -732,8 +730,7 @@
                 <li>Acesso Ilimitado a Leads</li>
                 <li>Selo de Artista Verificado</li>
               </ul>
-              <a href="https://mpago.la/2n8ok9A" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center; margin-bottom:8px;" onclick="addCredits(200)">Comprar por R$ 200</a>
-              <button class="btn sm" style="width:100%; justify-content:center;" onclick="simulatePayment(200, 0, 'Unlimited')">Simular Confirmação PIX/MP</button>
+              <button class="btn primary" style="width:100%; justify-content:center;" onclick="initiateCheckout('unlimited', 200, 0)">Comprar Plano Ilimitado</button>
             </div>
           </div>
         </div>
@@ -1486,14 +1483,10 @@
       });
     }
 
-    // Simulador de Confirmação e Adição de Créditos / Planos (6 Meses)
-    async function addCredits(amount) {
-      console.log('Link de pagamento acionado para valor:', amount);
-    }
-
-    async function simulatePayment(amount, creditsToAdd, planType) {
+    // Fluxo de Pagamento Real via Gateway (Criação de Pedido Pendente)
+    async function initiateCheckout(planType, price, creditsToAdd) {
       if(!currentArtistId) {
-        alert('Por favor, selecione ou entre com um perfil de artista no Painel Grafiteiro antes de testar a compra.');
+        alert('Por favor, selecione ou entre com um perfil de artista no Painel Grafiteiro antes de efetuar uma compra.');
         showView('artist');
         return;
       }
@@ -1502,27 +1495,26 @@
       if(!artist) return;
 
       try {
-        const artistRef = window.doc(window.db, 'artists', currentArtistId);
-        if(planType === 'Unlimited' || amount === 200) {
-          // Validade de 6 meses
-          const now = new Date();
-          now.setMonth(now.getMonth() + 6);
-          await window.updateDoc(artistRef, {
-            unlimitedExpires: now.toISOString()
-          });
-          alert('Pagamento simulado aprovado com sucesso! Plano Ilimitado de 6 meses ativado.');
-        } else {
-          const currentCredits = artist.credits || 0;
-          const newCredits = currentCredits + creditsToAdd;
-          await window.updateDoc(artistRef, {
-            credits: newCredits
-          });
-          alert(`Pagamento simulado aprovado com sucesso! +${creditsToAdd} créditos adicionados ao seu perfil.`);
-        }
-        renderActiveProfileCard();
-        showView('artist');
+        // 1. Criar um registro de pedido com status "pendente" no Firestore
+        const orderRef = await window.addDoc(window.collection(window.db, 'orders'), {
+          artistId: currentArtistId,
+          artistEmail: artist.email || currentUserEmailVal,
+          planType: planType,
+          amount: price,
+          credits: creditsToAdd,
+          status: 'pending', // O webhook do gateway atualizará para 'approved' após a confirmação real
+          createdAt: new Date().toISOString()
+        });
+
+        alert(`Intenção de compra registrada com sucesso! (Pedido ID: ${orderRef.id}).\n\nEm um ambiente de produção completo, você seria redirecionado para o Gateway de Pagamento (Mercado Pago / Stripe). Os créditos serão liberados automaticamente pelo servidor via Webhook somente após a confirmação real do pagamento.`);
+
+        // Aqui você faria a chamada para a sua Cloud Function / API para gerar a preferência de pagamento do gateway:
+        // const response = await fetch('/api/create-preference', { method: 'POST', body: JSON.stringify({ orderId: orderRef.id, planType, price }) });
+        // const data = await response.json();
+        // window.location.href = data.init_point; // Redireciona para o gateway
+
       } catch(err) {
-        alert('Erro ao atualizar créditos: ' + err.message);
+        alert('Erro ao registrar intenção de compra: ' + err.message);
       }
     }
   </script>
