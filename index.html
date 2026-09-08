@@ -149,7 +149,7 @@
     }
     .hero p{ color:var(--muted); font-size:15px; margin-bottom:14px; }
 
-    .hero-actions{ display:flex; gap:12px; }
+    .hero-actions{ display:flex; gap:12px; flex-wrap:wrap; }
 
     .services-grid{
       display:grid;
@@ -302,7 +302,7 @@
     textarea{ min-height:110px; resize:vertical; }
 
     .lead-list{ display:flex; flex-direction:column; gap:12px; }
-    .lead-item{ background:#fff; border-radius:10px; padding:14px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .lead-item{ background:#fff; border-radius:10px; padding:14px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap: wrap; }
     .status-badge{ font-size:11px; font-weight:700; padding:6px 10px; border-radius:20px; }
     .status-badge.open{ background:#fff7ed; color:#b45309; border:1px solid rgba(196,74,12,0.06); }
     .status-badge.closed{ background:#f0fdf4; color:#166534; border:1px solid rgba(16,185,129,0.06); }
@@ -326,11 +326,15 @@
     footer{ text-align:center; color:var(--muted); font-size:13px; margin-top:28px; }
 
     @media (max-width:900px){
-      header.app-header{ flex-direction:column; gap:12px; align-items:stretch; }
+      body { padding: 12px; }
+      header.app-header{ flex-direction:column; gap:12px; align-items:stretch; position: relative; top: 0; margin-bottom: 16px; padding: 14px 16px; }
       .hero-left{ max-width:100%; }
       .grid{ grid-template-columns: 1fr; }
       .col-8, .col-4, .col-6 { grid-column: span 1; }
-      .hero h2{ font-size:28px; }
+      .hero h2{ font-size:26px; }
+      nav.top-nav { justify-content: center; }
+      .hero { padding: 24px 16px; flex-direction: column; align-items: stretch; }
+      .card { padding: 16px; }
     }
   </style>
 </head>
@@ -376,7 +380,7 @@
         <div class="col-8">
           <div class="card">
             <h2 class="section-title">Galeria de Murais Recentes</h2>
-            <p class="subtitle">Confira alguns dos últimos trabalhos realizados por artistas cadastrados.</p>
+            <p class="subtitle">Confira os trabalhos recentes postados por todos os artistas cadastrados na comunidade.</p>
             <div class="carousel-container">
               <div class="carousel-track" id="publicGallery"></div>
             </div>
@@ -442,7 +446,7 @@
       <div class="grid">
         <div class="col-8">
           <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
               <div>
                 <h2 class="section-title">Meu Portfólio de Obras</h2>
                 <p class="subtitle" style="margin-bottom:0">Gerencie a galeria exibida para potenciais clientes.</p>
@@ -565,17 +569,17 @@
                 </div>
               </div>
 
-              <div class="form-group">
+              <div class="form-group" style="margin-top:12px;">
                 <label for="address">Endereço / Bairro (Rio de Janeiro)</label>
                 <input id="address" type="text" placeholder="Ex: Copacabana / Rua Barata Ribeiro" required>
               </div>
 
-              <div class="form-group">
+              <div class="form-group" style="margin-top:12px;">
                 <label for="wallPhoto">Foto da Parede (Opcional)</label>
                 <input id="wallPhoto" type="file" accept="image/*">
               </div>
 
-              <div class="form-group">
+              <div class="form-group" style="margin-top:12px;">
                 <label for="desc">Descrição do Projeto e Medidas Aprox.</label>
                 <textarea id="desc" placeholder="Ex: Parede de 4m x 3m na sala comercial. Gostaria de um estilo abstrato e colorido." required></textarea>
               </div>
@@ -614,11 +618,11 @@
             <div class="card" style="padding:22px;">
               <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Starter</div>
               <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 30 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
-              <ul style="color:var(--muted); margin-bottom:14px; list-style:inside;">
+              <ul style="color:var(--muted); margin-bottom:14px; list-style:inside; text-align:left;">
                 <li>Acesso ao Mural de Leads</li>
                 <li>Desbloqueio de Oportunidades</li>
               </ul>
-              <a href="https://mpago.la/1vucjSV" target="_blank" rel="noopener" class="btn primary" style="width:100%;">Comprar por R$ 30</a>
+              <a href="https://mpago.la/1vucjSV" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;">Comprar por R$ 30</a>
             </div>
           </div>
 
@@ -628,11 +632,11 @@
                 <div class="plan-badge" style="position:absolute; top:-18px; right:12px; background:var(--accent-2); color:#fff; padding:6px 12px; border-radius:12px; font-weight:800; font-size:12px;">Mais Popular</div>
                 <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Pro</div>
                 <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 50 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
-                <ul style="color:var(--muted); margin-bottom:14px; list-style:inside;">
+                <ul style="color:var(--muted); margin-bottom:14px; list-style:inside; text-align:left;">
                   <li>Maior Saldo de Créditos</li>
                   <li>Destaque no Mural do Cliente</li>
                 </ul>
-                <a href="https://mpago.la/2LV6ctf" target="_blank" rel="noopener" class="btn primary" style="width:100%;">Comprar por R$ 50</a>
+                <a href="https://mpago.la/2LV6ctf" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;">Comprar por R$ 50</a>
               </div>
             </div>
           </div>
@@ -641,11 +645,11 @@
             <div class="card" style="padding:22px;">
               <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Ouro</div>
               <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 200 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
-              <ul style="color:var(--muted); margin-bottom:14px; list-style:inside;">
+              <ul style="color:var(--muted); margin-bottom:14px; list-style:inside; text-align:left;">
                 <li>Acesso Ilimitado a Leads</li>
                 <li>Selo de Artista Verificado</li>
               </ul>
-              <a href="https://mpago.la/2n8ok9A" target="_blank" rel="noopener" class="btn primary" style="width:100%;">Comprar por R$ 200</a>
+              <a href="https://mpago.la/2n8ok9A" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;">Comprar por R$ 200</a>
             </div>
           </div>
         </div>
@@ -736,18 +740,29 @@
     <!-- Rodapé com Carrossel de Clientes e Grandes Marcas -->
     <div class="clients-footer-carousel">
       <div class="clients-track">
-        <div class="client-logo-item">ATELIÉ CARIOCA</div>
-        <div class="client-logo-item">GALERIA RIO</div>
-        <div class="client-logo-item">URBAN SPACES RJ</div>
-        <div class="client-logo-item">COPA DESIGN</div>
-        <div class="client-logo-item">CULTURAL BOTAFOGO</div>
-        <div class="client-logo-item">MURAL BRASIL</div>
-        <div class="client-logo-item">ATELIÉ CARIOCA</div>
-        <div class="client-logo-item">GALERIA RIO</div>
-        <div class="client-logo-item">URBAN SPACES RJ</div>
-        <div class="client-logo-item">COPA DESIGN</div>
-        <div class="client-logo-item">CULTURAL BOTAFOGO</div>
-        <div class="client-logo-item">MURAL BRASIL</div>
+        <div class="client-logo-item">PREFEITURA DA COLÚMBIA</div>
+        <div class="client-logo-item">ÓTICAS CAROL</div>
+        <div class="client-logo-item">DROGARIA RAIA</div>
+        <div class="client-logo-item">SUPERVIA</div>
+        <div class="client-logo-item">ROCK IN RIO</div>
+        <div class="client-logo-item">ESTADO DO RIO DE JANEIRO</div>
+        <div class="client-logo-item">MARINHA</div>
+        <div class="client-logo-item">EXÉRCITO</div>
+        <div class="client-logo-item">PAPAIZ</div>
+        <div class="client-logo-item">SHOPPING UPTOWN</div>
+        <div class="client-logo-item">GLOBO</div>
+        <!-- Duplicação para loop contínuo perfeito -->
+        <div class="client-logo-item">PREFEITURA DA COLÚMBIA</div>
+        <div class="client-logo-item">ÓTICAS CAROL</div>
+        <div class="client-logo-item">DROGARIA RAIA</div>
+        <div class="client-logo-item">SUPERVIA</div>
+        <div class="client-logo-item">ROCK IN RIO</div>
+        <div class="client-logo-item">ESTADO DO RIO DE JANEIRO</div>
+        <div class="client-logo-item">MARINHA</div>
+        <div class="client-logo-item">EXÉRCITO</div>
+        <div class="client-logo-item">PAPAIZ</div>
+        <div class="client-logo-item">SHOPPING UPTOWN</div>
+        <div class="client-logo-item">GLOBO</div>
       </div>
     </div>
 
@@ -805,6 +820,7 @@
         renderPublicProfile(param);
       }
       renderAll();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function renderAll() {
@@ -904,7 +920,7 @@
       renderPublicGallery();
     }
 
-    /* Galeria Pública global com Carrossel da Direita para a Esquerda */
+    /* Galeria Pública global exibindo as fotos de TODOS os artistas */
     function renderPublicGallery() {
       const list = loadData(LS.portfolio, []);
       const profiles = loadData(LS.profiles, []);
@@ -943,7 +959,7 @@
       }
 
       container.innerHTML = `
-        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
           ${p.photo ? `<img src="${p.photo}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : `<div style="width:80px; height:80px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:24px;">🎨</div>`}
           <div>
             <h2 style="font-family:var(--font-heading); font-size:24px; color:var(--accent-2);">${p.name}</h2>
@@ -1083,7 +1099,7 @@
       container.innerHTML = profiles.map(p => {
         const isOwner = myOwnedProfiles.includes(p.id);
         return `
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; border-radius:8px; padding:10px; border:1px solid var(--border); background:#fff;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; border-radius:8px; padding:10px; border:1px solid var(--border); background:#fff; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
               ${p.photo ? `<img src="${p.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : `<div style="width:36px; height:36px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted);">🎨</div>`}
               <div>
@@ -1119,7 +1135,7 @@
       }
 
       container.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
           <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
             ${p.photo ? `<img src="${p.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : ``}
             <div>
@@ -1261,10 +1277,10 @@
         const img = sample ? sample.src : (p.photo || 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400');
         return `
           <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
-            <div style="width:54px; height:48px; border-radius:8px; overflow:hidden; border:1px solid var(--border);"><img src="${img}" style="width:100%; height:100%; object-fit:cover;"></div>
-            <div style="flex:1;">
-              <div style="font-weight:700; color:var(--accent-2);">${p.name}</div>
-              <div style="font-size:12px; color:var(--muted);">${p.location} • ${p.specialties}</div>
+            <div style="width:54px; height:48px; border-radius:8px; overflow:hidden; border:1px solid var(--border); flex-shrink:0;"><img src="${img}" style="width:100%; height:100%; object-fit:cover;"></div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:700; color:var(--accent-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
+              <div style="font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.location} • ${p.specialties}</div>
             </div>
             <div>
               <button class="btn sm" onclick="event.stopPropagation(); showView('artist-public', '${p.id}')">Ver</button>
@@ -1322,7 +1338,7 @@
         alert("Solicitação de orçamento enviada com sucesso!");
       } catch (e) {
         console.error("Erro no Firebase (Pedidos):", e);
-        alert("Erro ao enviar pedido para la nuvem.");
+        alert("Erro ao enviar pedido para a nuvem.");
       }
     };
 
