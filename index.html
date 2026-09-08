@@ -443,7 +443,7 @@
         <div class="col-8">
           <div class="card">
             <h2 class="section-title">Galeria de Murais Recentes</h2>
-            <p class="subtitle">Confira os trabalhos recentes postados por todos os artistas cadastrados na comunidade.</p>
+            <p class="subtitle">Confira os trabalhos recentes postados em nuvem por todos os artistas cadastrados na comunidade.</p>
             <div class="carousel-container">
               <div class="carousel-track" id="publicGallery"></div>
             </div>
@@ -491,7 +491,7 @@
         <div class="col-4">
           <div class="card">
             <h2 class="section-title">Artistas em Destaque</h2>
-            <p class="subtitle">Perfis recentes e portfólios ativos.</p>
+            <p class="subtitle">Perfis recentes e portfólios ativos na nuvem.</p>
             <div id="featuredArtists"></div>
           </div>
 
@@ -512,7 +512,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
               <div>
                 <h2 class="section-title">Meu Portfólio de Obras</h2>
-                <p class="subtitle" style="margin-bottom:0">Gerencie a galeria exibida para potenciais clientes.</p>
+                <p class="subtitle" style="margin-bottom:0">Gerencie a galeria em nuvem exibida para potenciais clientes.</p>
               </div>
 
               <div style="display:flex; gap:8px; align-items:center;" id="portfolioUploadContainer">
@@ -536,13 +536,13 @@
 
         <div class="col-4">
           <div class="card">
-            <h2 class="section-title">Cadastro / Perfil do Artista</h2>
-            <p class="subtitle">Autentique-se ou cadastre-se para gerenciar seu portfólio e leads.</p>
+            <h2 class="section-title">Autenticação & Perfil</h2>
+            <p class="subtitle">Faça login com e-mail e senha cadastrados para gerenciar seu portfólio.</p>
 
-            <!-- Área de Login Existente -->
+            <!-- Área de Login Firebase Authentication -->
             <div id="authArea" style="margin-bottom:14px; padding:12px; border:1px solid var(--border); border-radius:10px; background:#fcfcfc;">
               <div id="loggedOutView">
-                <p style="font-size:13px; font-weight:600; margin-bottom:8px;">Já possui conta? Faça Login:</p>
+                <p style="font-size:13px; font-weight:600; margin-bottom:8px;">Acesse sua conta:</p>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                   <input id="loginEmail" type="email" placeholder="Seu e-mail cadastrado">
                   <input id="loginPassword" type="password" placeholder="Sua senha">
@@ -550,7 +550,7 @@
                 </div>
               </div>
               <div id="loggedInView" style="display:none;">
-                <p style="font-size:13px; font-weight:600; color:var(--accent-2); margin-bottom:6px;">Sessão Ativa:</p>
+                <p style="font-size:13px; font-weight:600; color:var(--accent-2); margin-bottom:6px;">Sessão Autenticada:</p>
                 <p id="currentUserEmail" style="font-size:13px; color:var(--text); margin-bottom:8px; word-break:break-all;"></p>
                 <button class="btn sm" onclick="logoutArtist()" style="width:100%; justify-content:center;">Sair da Conta</button>
               </div>
@@ -572,8 +572,8 @@
                   <input id="artistEmail" type="email" placeholder="seu@email.com" required>
                 </div>
                 <div style="margin-bottom:8px;">
-                  <label for="artistPassword">Senha de Acesso</label>
-                  <input id="artistPassword" type="password" placeholder="Sua senha (mín. 6 caracteres)" required>
+                  <label for="artistPassword">Senha de Acesso (Mín. 6 caracteres)</label>
+                  <input id="artistPassword" type="password" placeholder="Crie uma senha forte" required>
                 </div>
                 <div style="margin-bottom:8px;">
                   <label for="artistCpf">CPF (Apenas 1 por cadastro)</label>
@@ -604,10 +604,10 @@
           </div>
 
           <div class="card">
-            <h2 class="section-title">Meu Saldo</h2>
+            <h2 class="section-title">Meu Saldo & Validade</h2>
             <div style="font-size:28px; font-weight:700; color:var(--accent-2); margin:8px 0;" id="creditsDisplay">0 Créditos</div>
             <div id="unlimitedPlanStatus" style="font-size:12px; color:#166534; font-weight:600; margin-bottom:8px; display:none;">Plano Ilimitado Ativo (Válido até: <span id="unlimitedDate">--/--/----</span>)</div>
-            <p style="color:var(--muted); font-size:13px; margin-bottom:12px;">Utilize seus créditos ou plano ilimitado para desbloquear contatos diretos (WhatsApp) dos clientes.</p>
+            <p style="color:var(--muted); font-size:13px; margin-bottom:12px;">Utilize seus créditos ou plano ilimitado de 6 meses para desbloquear contatos diretos (WhatsApp) dos clientes.</p>
             <button class="btn primary" style="width:100%" onclick="showView('plans')">Comprar Mais Créditos / Plano</button>
           </div>
         </div>
@@ -619,7 +619,7 @@
       <div class="card" style="max-width: 800px; margin: 0 auto;">
         <div id="publicProfileContent"></div>
         <div style="margin-top: 20px;">
-          <h3 style="font-family:var(--font-heading); font-size:20px; color:var(--accent); margin-bottom:12px;">Portfólio do Artista</h3>
+          <h3 style="font-family:var(--font-heading); font-size:20px; color:var(--accent); margin-bottom:12px;">Portfólio em Nuvem do Artista</h3>
           <div class="carousel-container">
             <div class="carousel-track" id="publicProfilePortfolio"></div>
           </div>
@@ -692,7 +692,7 @@
     <section id="plans" class="view">
       <div class="card" style="text-align:center; padding:36px 20px;">
         <h2 class="section-title">Planos & Pacotes de Créditos</h2>
-        <p class="subtitle" style="max-width:700px; margin:0 auto 20px;">Adquira créditos para liberar contatos diretos de clientes interessados no seu trabalho através do nosso gateway de pagamento seguro.</p>
+        <p class="subtitle" style="max-width:700px; margin:0 auto 20px;">Adquira créditos ou assine o plano ilimitado de 6 meses para liberar contatos diretos de clientes através do nosso gateway de pagamento seguro.</p>
 
         <div class="grid" style="grid-template-columns: repeat(12,1fr); gap:16px;">
           <div class="col-4">
@@ -727,7 +727,7 @@
               <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Ouro (Ilimitado 6 Meses)</div>
               <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 200 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ 6 meses</span></div>
               <ul style="color:var(--muted); margin-bottom:14px; list-style:inside; text-align:left;">
-                <li>Acesso Ilimitado a Leads</li>
+                <li>Acesso Ilimitado a Leads por 6 Meses</li>
                 <li>Selo de Artista Verificado</li>
               </ul>
               <button class="btn primary" style="width:100%; justify-content:center;" onclick="initiateCheckout('unlimited', 200, 0)">Comprar Plano Ilimitado</button>
@@ -769,7 +769,7 @@
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Como funciona a contratação de um artista? <span>+</span></button>
-            <div class="faq-answer">O solicitante preenche os dados da parede e detalhes do projeto. Os artistas cadastrados visualizam o chamado, e os interessados utilizam créditos ou plano ilimitado para desbloquear o contato direto via WhatsApp.</div>
+            <div class="faq-answer">O solicitante preenche os dados da parede e detalhes do projeto. Os artistas cadastrados visualizam o chamado, e os interessados utilizam créditos ou plano ilimitado de 6 meses para desbloquear o contato direto via WhatsApp.</div>
           </div>
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Qual é a logística para execução dos murais no Rio de Janeiro? <span>+</span></button>
@@ -807,10 +807,10 @@
           <button class="btn sm" onclick="closeTermsModal()">Fechar</button>
         </div>
         <div class="modal-body">
-          <p>Bem-vindo à Grafiterj. Ao solicitar orçamentos ou utilizar nossa plataforma de curadoria e arte urbana no Rio de Janeiro, você concorda com das diretrizes abaixo:</p>
+          <p>Bem-vindo à Grafiterj. Ao solicitar orçamentos ou utilizar nossa plataforma de curadoria e arte urbana no Rio de Janeiro, você concorda com as diretrizes abaixo:</p>
           <p><strong>1. Transparência e Contato:</strong> Os dados de contato fornecidos nas solicitações de orçamento são utilizados exclusivamente para conectar contratantes aos artistas locais cadastrados.</p>
           <p><strong>2. Compromisso de Execução:</strong> O alinhamento de valores, prazos e especificações técnicas de murais ou pinturas ocorre diretamente entre as partes.</p>
-          <p><strong>3. Propriedade Intelectual:</strong> As imagens de portfólio exibidas pertencem aos respectivos artistas e curadores parceiros da plataforma.</p>
+          <p><strong>3. Propriedade Intelectual:</strong> As imagens de portfólio em nuvem exibidas pertencem aos respectivos artistas e curadores parceiros da plataforma.</p>
         </div>
         <div style="text-align: right;">
           <button class="btn primary" onclick="acceptTermsAndClose()">Entendido e Concordo</button>
@@ -946,7 +946,7 @@
       return true;
     }
 
-    // Login por E-mail e Senha
+    // Login por E-mail e Senha (Firebase Authentication)
     async function loginArtist() {
       const email = document.getElementById('loginEmail').value.trim();
       const pass = document.getElementById('loginPassword').value;
@@ -991,7 +991,7 @@
         renderBudgets();
       }, err => console.log('Erro artistas:', err));
 
-      // Portfólio (Fotos)
+      // Portfólio (Fotos na Nuvem Firestore)
       window.onSnapshot(window.collection(window.db, 'portfolio'), snapshot => {
         portfolioCache = [];
         snapshot.forEach(doc => {
@@ -1179,10 +1179,10 @@
       }
     }
 
-    // Gerenciamento de Portfólio em Nuvem (Firestore)
+    // Gerenciamento de Portfólio em Nuvem (Firestore) com Proteção por Autenticação
     async function handlePortfolioUpload(event) {
-      if(!currentArtistId) {
-        alert('Você precisa estar logado ou selecionar um perfil para adicionar fotos ao portfólio.');
+      if(!currentArtistId || !window.auth.currentUser) {
+        alert('Você precisa estar logado com e-mail e senha para adicionar fotos ao portfólio em nuvem.');
         return;
       }
       const file = event.target.files[0];
@@ -1201,21 +1201,21 @@
             url: imageUrl,
             createdAt: new Date().toISOString()
           });
-          alert('Foto adicionada ao portfólio em nuvem!');
+          alert('Foto adicionada e sincronizada com sucesso na nuvem!');
           event.target.value = '';
         } catch(err) {
-          alert('Erro ao enviar foto: ' + err.message);
+          alert('Erro ao enviar foto para a nuvem: ' + err.message);
         }
       };
       reader.readAsDataURL(file);
     }
 
     async function deletePortfolioItem(id, artistId) {
-      if(!window.auth.currentUser && currentArtistId !== artistId) {
-        alert('Apenas o dono desta conta logada pode excluir fotos do portfólio.');
+      if(!window.auth.currentUser || currentArtistId !== artistId) {
+        alert('Apenas o dono autenticado desta conta pode excluir fotos do portfólio.');
         return;
       }
-      if(confirm('Deseja realmente excluir esta obra do portfólio?')) {
+      if(confirm('Deseja realmente excluir esta obra do portfólio em nuvem?')) {
         try {
           await window.deleteDoc(window.doc(window.db, 'portfolio', id));
           alert('Obra excluída com sucesso.');
@@ -1238,7 +1238,7 @@
       }
 
       myWorks.forEach(item => {
-        const canDelete = window.auth.currentUser || item.artistId === currentArtistId;
+        const canDelete = window.auth.currentUser && item.artistId === currentArtistId;
         const div = document.createElement('div');
         div.className = 'thumb';
         div.innerHTML = `
@@ -1250,7 +1250,7 @@
       });
     }
 
-    // Galeria Pública (Home)
+    // Galeria Pública (Home) - Puxando da Nuvem
     function renderPublicGallery() {
       const track = document.getElementById('publicGallery');
       if(!track) return;
@@ -1390,7 +1390,7 @@
         const unlockedList = budget.unlockedBy || [];
         const isUnlocked = currentArtistId && unlockedList.includes(currentArtistId);
 
-        // Verificar se plano ilimitado está ativo
+        // Verificar se plano ilimitado de 6 meses está ativo
         let hasUnlimited = false;
         if(currentArtist && currentArtist.unlimitedExpires) {
           if(new Date(currentArtist.unlimitedExpires) > new Date()) hasUnlimited = true;
@@ -1424,7 +1424,7 @@
       const artist = artistsCache.find(a => a.id === currentArtistId);
       if(!artist) return;
 
-      // Verificar plano ilimitado
+      // Verificar plano ilimitado de 6 meses
       let hasUnlimited = false;
       if(artist.unlimitedExpires && new Date(artist.unlimitedExpires) > new Date()) {
         hasUnlimited = true;
@@ -1432,7 +1432,7 @@
 
       let credits = artist.credits || 0;
       if(!hasUnlimited && credits <= 0) {
-        alert('Seus créditos acabaram! Adquira mais créditos ou assine o plano ilimitado.');
+        alert('Seus créditos acabaram! Adquira mais créditos ou assine o plano ilimitado de 6 meses.');
         showView('plans');
         return;
       }
@@ -1483,7 +1483,7 @@
       });
     }
 
-    // Fluxo de Pagamento Real via Gateway (Criação de Pedido Pendente)
+    // Fluxo de Pagamento Real via Gateway (Mercado Pago / Webhook)
     async function initiateCheckout(planType, price, creditsToAdd) {
       if(!currentArtistId) {
         alert('Por favor, selecione ou entre com um perfil de artista no Painel Grafiteiro antes de efetuar uma compra.');
@@ -1495,26 +1495,25 @@
       if(!artist) return;
 
       try {
-        // 1. Criar um registro de pedido com status "pendente" no Firestore
+        // 1. Criar um registro de pedido com status "pending" no Firestore para processamento seguro via Webhook
         const orderRef = await window.addDoc(window.collection(window.db, 'orders'), {
           artistId: currentArtistId,
           artistEmail: artist.email || currentUserEmailVal,
           planType: planType,
           amount: price,
           credits: creditsToAdd,
-          status: 'pending', // O webhook do gateway atualizará para 'approved' após a confirmação real
+          status: 'pending',
           createdAt: new Date().toISOString()
         });
 
-        alert(`Intenção de compra registrada com sucesso! (Pedido ID: ${orderRef.id}).\n\nEm um ambiente de produção completo, você seria redirecionado para o Gateway de Pagamento (Mercado Pago / Stripe). Os créditos serão liberados automaticamente pelo servidor via Webhook somente após a confirmação real do pagamento.`);
+        // Configuração recomendada para back_urls e auto_return no backend com Mercado Pago:
+        // back_urls: { success: "https://seusite.com/sucesso.html", pending: "...", failure: "..." }
+        // auto_return: "approved"
 
-        // Aqui você faria a chamada para a sua Cloud Function / API para gerar a preferência de pagamento do gateway:
-        // const response = await fetch('/api/create-preference', { method: 'POST', body: JSON.stringify({ orderId: orderRef.id, planType, price }) });
-        // const data = await response.json();
-        // window.location.href = data.init_point; // Redireciona para o gateway
+        alert(`Intenção de compra registrada com ID: ${orderRef.id}.\n\nPara pagamentos reais, configure a API de Preferência de Pagamento do Mercado Pago no seu backend com Webhook para atualizar o saldo automaticamente no Firestore após a aprovação.`);
 
       } catch(err) {
-        alert('Erro ao registrar intenção de compra: ' + err.message);
+        alert('Erro ao iniciar o checkout: ' + err.message);
       }
     }
   </script>
