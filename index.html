@@ -197,7 +197,7 @@
       100% { transform: translateX(-50%); }
     }
     .gallery{ display:flex; gap:12px; }
-    .thumb{ border-radius:10px; overflow:hidden; background:#f3f4f6; border:1px solid var(--border); min-width:200px; width:200px; aspect-ratio:4/3; display:block; position:relative; flex-shrink:0; }
+    .thumb{ border-radius:10px; overflow:hidden; background:#f3f4f6; border:1px solid var(--border); min-width:200px; width:200px; aspect-ratio:4/3; display:block; position:relative; flex-shrink:0; cursor:pointer; }
     .thumb img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .35s ease; }
     .thumb:hover img{ transform:scale(1.03); }
     .thumb .meta{
@@ -211,6 +211,23 @@
       font-weight:600;
       border:1px solid rgba(15,23,42,0.04);
       backdrop-filter: blur(4px);
+    }
+    .thumb .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(239, 68, 68, 0.9);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
     }
 
     /* Carrossel de Clientes / Rodapé */
@@ -337,6 +354,11 @@
       .card { padding: 16px; }
     }
   </style>
+
+  <!-- Firebase SDKs (Compat / Modular via CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -452,8 +474,8 @@
                 <p class="subtitle" style="margin-bottom:0">Gerencie a galeria exibida para potenciais clientes.</p>
               </div>
 
-              <div style="display:flex; gap:8px; align-items:center;">
-                <label for="portfolioUpload" class="btn primary sm">+ Adicionar Foto</label>
+              <div style="display:flex; gap:8px; align-items:center;" id="portfolioUploadContainer">
+                <label for="portfolioUpload" class="btn primary sm" style="cursor:pointer;">+ Adicionar Foto</label>
                 <input id="portfolioUpload" type="file" accept="image/*" style="display:none" onchange="handlePortfolioUpload(event)">
                 <button class="btn" onclick="renderPortfolio()">Atualizar</button>
               </div>
@@ -474,7 +496,24 @@
         <div class="col-4">
           <div class="card">
             <h2 class="section-title">Cadastro / Perfil do Artista</h2>
-            <p class="subtitle">Crie e selecione seu perfil para publicar portfólio e se conectar a clientes.</p>
+            <p class="subtitle">Autentique-se ou cadastre-se para gerenciar seu portfólio e leads.</p>
+
+            <!-- Área de Login Existente -->
+            <div id="authArea" style="margin-bottom:14px; padding:12px; border:1px solid var(--border); border-radius:10px; background:#fcfcfc;">
+              <div id="loggedOutView">
+                <p style="font-size:13px; font-weight:600; margin-bottom:8px;">Já possui conta? Faça Login:</p>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <input id="loginEmail" type="email" placeholder="Seu e-mail cadastrado">
+                  <input id="loginPassword" type="password" placeholder="Sua senha">
+                  <button class="btn primary sm" onclick="loginArtist()" style="justify-content:center;">Entrar</button>
+                </div>
+              </div>
+              <div id="loggedInView" style="display:none;">
+                <p style="font-size:13px; font-weight:600; color:var(--accent-2); margin-bottom:6px;">Sessão Ativa:</p>
+                <p id="currentUserEmail" style="font-size:13px; color:var(--text); margin-bottom:8px; word-break:break-all;"></p>
+                <button class="btn sm" onclick="logoutArtist()" style="width:100%; justify-content:center;">Sair da Conta</button>
+              </div>
+            </div>
 
             <div id="profileArea" style="display:flex; flex-direction:column; gap:12px;">
               <div id="activeProfileCard" style="padding:10px; border-radius:10px; border:1px solid var(--border); background:#fff;"></div>
@@ -493,7 +532,7 @@
                 </div>
                 <div style="margin-bottom:8px;">
                   <label for="artistPassword">Senha de Acesso</label>
-                  <input id="artistPassword" type="password" placeholder="Sua senha" required>
+                  <input id="artistPassword" type="password" placeholder="Sua senha (mín. 6 caracteres)" required>
                 </div>
                 <div style="margin-bottom:8px;">
                   <label for="artistCpf">CPF (Apenas 1 por cadastro)</label>
@@ -516,7 +555,7 @@
                   <input id="artistSpec" type="text" placeholder="Ex: Murais, Stencil, Lettering" required>
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                  <button class="btn primary" type="submit">Salvar Perfil</button>
+                  <button class="btn primary" type="submit" id="saveProfileBtn">Cadastrar & Criar Conta</button>
                   <button class="btn" type="button" onclick="clearProfileForm()">Limpar</button>
                 </div>
               </form>
@@ -526,8 +565,9 @@
           <div class="card">
             <h2 class="section-title">Meu Saldo</h2>
             <div style="font-size:28px; font-weight:700; color:var(--accent-2); margin:8px 0;" id="creditsDisplay">0 Créditos</div>
-            <p style="color:var(--muted); font-size:13px; margin-bottom:12px;">Utilize seus créditos para desbloquear contatos diretos (WhatsApp) dos clientes.</p>
-            <button class="btn primary" style="width:100%" onclick="showView('plans')">Comprar Mais Créditos</button>
+            <div id="unlimitedPlanStatus" style="font-size:12px; color:#166534; font-weight:600; margin-bottom:8px; display:none;">Plano Ilimitado Ativo (Válido até: <span id="unlimitedDate">--/--/----</span>)</div>
+            <p style="color:var(--muted); font-size:13px; margin-bottom:12px;">Utilize seus créditos ou plano ilimitado para desbloquear contatos diretos (WhatsApp) dos clientes.</p>
+            <button class="btn primary" style="width:100%" onclick="showView('plans')">Comprar Mais Créditos / Plano</button>
           </div>
         </div>
       </div>
@@ -622,7 +662,8 @@
                 <li>Acesso ao Mural de Leads</li>
                 <li>Desbloqueio de Oportunidades</li>
               </ul>
-              <a href="https://mpago.la/1vucjSV" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;" onclick="addCredits(30)">Comprar por R$ 30</a>
+              <a href="https://mpago.la/1vucjSV" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center; margin-bottom:8px;" onclick="addCredits(30)">Comprar por R$ 30</a>
+              <button class="btn sm" style="width:100%; justify-content:center;" onclick="simulatePayment(30, 5, 'Starter')">Simular Confirmação PIX/MP</button>
             </div>
           </div>
 
@@ -636,20 +677,22 @@
                   <li>Maior Saldo de Créditos</li>
                   <li>Destaque no Mural do Cliente</li>
                 </ul>
-                <a href="https://mpago.la/2LV6ctf" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;" onclick="addCredits(50)">Comprar por R$ 50</a>
+                <a href="https://mpago.la/2LV6ctf" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center; margin-bottom:8px;" onclick="addCredits(50)">Comprar por R$ 50</a>
+                <button class="btn sm" style="width:100%; justify-content:center;" onclick="simulatePayment(50, 10, 'Pro')">Simular Confirmação PIX/MP</button>
               </div>
             </div>
           </div>
 
           <div class="col-4">
             <div class="card" style="padding:22px;">
-              <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Ouro</div>
-              <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 200 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ único</span></div>
+              <div class="plan-title" style="font-weight:700; color:var(--accent-2); margin-bottom:6px;">Pacote Ouro (Ilimitado 6 Meses)</div>
+              <div style="font-size:22px; font-weight:800; color:var(--accent); margin-bottom:14px;">R$ 200 <span style="font-size:12px; color:var(--muted); font-weight:500;">/ 6 meses</span></div>
               <ul style="color:var(--muted); margin-bottom:14px; list-style:inside; text-align:left;">
                 <li>Acesso Ilimitado a Leads</li>
                 <li>Selo de Artista Verificado</li>
               </ul>
-              <a href="https://mpago.la/2n8ok9A" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;" onclick="addCredits(200)">Comprar por R$ 200</a>
+              <a href="https://mpago.la/2n8ok9A" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center; margin-bottom:8px;" onclick="addCredits(200)">Comprar por R$ 200</a>
+              <button class="btn sm" style="width:100%; justify-content:center;" onclick="simulatePayment(200, 0, 'Unlimited')">Simular Confirmação PIX/MP</button>
             </div>
           </div>
         </div>
@@ -688,7 +731,7 @@
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Como funciona a contratação de um artista? <span>+</span></button>
-            <div class="faq-answer">O solicitante preenche os dados da parede e detalhes do projeto. Os artistas cadastrados visualizam o chamado, e os interessados utilizam créditos para desbloquear o contato direto via WhatsApp.</div>
+            <div class="faq-answer">O solicitante preenche os dados da parede e detalhes do projeto. Os artistas cadastrados visualizam o chamado, e os interessados utilizam créditos ou plano ilimitado para desbloquear o contato direto via WhatsApp.</div>
           </div>
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Qual é a logística para execução dos murais no Rio de Janeiro? <span>+</span></button>
@@ -726,7 +769,7 @@
           <button class="btn sm" onclick="closeTermsModal()">Fechar</button>
         </div>
         <div class="modal-body">
-          <p>Bem-vindo à Grafiterj. Ao solicitar orçamentos ou utilizar nossa plataforma de curadoria e arte urbana no Rio de Janeiro, você concorda com as diretrizes abaixo:</p>
+          <p>Bem-vindo à Grafiterj. Ao solicitar orçamentos ou utilizar nossa plataforma de curadoria e arte urbana no Rio de Janeiro, você concorda com das diretrizes abaixo:</p>
           <p><strong>1. Transparência e Contato:</strong> Os dados de contato fornecidos nas solicitações de orçamento são utilizados exclusivamente para conectar contratantes aos artistas locais cadastrados.</p>
           <p><strong>2. Compromisso de Execução:</strong> O alinhamento de valores, prazos e especificações técnicas de murais ou pinturas ocorre diretamente entre as partes.</p>
           <p><strong>3. Propriedade Intelectual:</strong> As imagens de portfólio exibidas pertencem aos respectivos artistas e curadores parceiros da plataforma.</p>
@@ -740,109 +783,71 @@
     <!-- Rodapé com Carrossel de Clientes e Grandes Marcas -->
     <div class="clients-footer-carousel">
       <div class="clients-track">
-        <div class="client-logo-item">PREFEITURA DA COLÚMBIA</div>
-        <div class="client-logo-item">ÓTICAS CAROL</div>
-        <div class="client-logo-item">DROGARIA RAIA</div>
-        <div class="client-logo-item">SUPERVIA</div>
-        <div class="client-logo-item">ROCK IN RIO</div>
-        <div class="client-logo-item">ESTADO DO RIO DE JANEIRO</div>
-        <div class="client-logo-item">MARINHA</div>
-        <div class="client-logo-item">EXÉRCITO</div>
-        <div class="client-logo-item">PAPAIZ</div>
-        <div class="client-logo-item">SHOPPING UPTOWN</div>
-        <div class="client-logo-item">GLOBO</div>
-        <!-- Duplicação para loop contínuo perfeito -->
-        <div class="client-logo-item">PREFEITURA DA COLÚMBIA</div>
-        <div class="client-logo-item">ÓTICAS CAROL</div>
-        <div class="client-logo-item">DROGARIA RAIA</div>
-        <div class="client-logo-item">SUPERVIA</div>
-        <div class="client-logo-item">ROCK IN RIO</div>
-        <div class="client-logo-item">ESTADO DO RIO DE JANEIRO</div>
-        <div class="client-logo-item">MARINHA</div>
-        <div class="client-logo-item">EXÉRCITO</div>
-        <div class="client-logo-item">PAPAIZ</div>
-        <div class="client-logo-item">SHOPPING UPTOWN</div>
-        <div class="client-logo-item">GLOBO</div>
+        <div class="client-logo-item">PREFEITURA DO RIO</div>
+        <div class="client-logo-item">GALERIA URBANA RJ</div>
+        <div class="client-logo-item">CASA COR RIO</div>
+        <div class="client-logo-item">MUSEU DE ARTE MODERNA</div>
+        <div class="client-logo-item">SECRETARIA DE CULTURA</div>
+        <div class="client-logo-item">PREFEITURA DO RIO</div>
+        <div class="client-logo-item">GALERIA URBANA RJ</div>
+        <div class="client-logo-item">CASA COR RIO</div>
+        <div class="client-logo-item">MUSEU DE ARTE MODERNA</div>
+        <div class="client-logo-item">SECRETARIA DE CULTURA</div>
       </div>
     </div>
 
     <footer>
-      &copy; Grafiterj — Curadoria & Plataforma de Arte Urbana RJ
+      <p>&copy; 2026 Grafiterj — Curadoria & Arte Urbana no Rio de Janeiro. Todos os direitos reservados.</p>
     </footer>
 
   </div>
 
+  <!-- SCRIPT DE LÓGICA E INTEGRAÇÃO FIREBASE -->
   <script>
-    const LS = {
-      portfolio: 'gj_portfolio_v2',
-      budgets: 'gj_budgets_v2',
-      credits: 'gj_credits_v2',
-      profiles: 'gj_profiles_v1',
-      activeProfile: 'gj_active_profile_v1',
-      myProfiles: 'gj_my_profiles_ownership_v1'
+    // Configuração Firebase (Compat / Modular)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDummyKeyForGrafiterjPlatform2026",
+      authDomain: "grafiterj-platform.firebaseapp.com",
+      projectId: "grafiterj-platform",
+      storageBucket: "grafiterj-platform.appspot.com",
+      messagingSenderId: "123456789012",
+      appId: "1:123456789012:web:abcdef1234567890"
     };
 
-    function loadData(key, defaultValue) {
-      if (key === LS.profiles) {
-        return (window.profiles && window.profiles.length) ? window.profiles : defaultValue;
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Estado Global da Aplicação
+    let currentArtistId = null;
+    let currentUserEmailVal = null;
+    let artistsCache = [];
+    let portfolioCache = [];
+    let budgetsCache = [];
+
+    // Navegação de Views
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => {
+        v.classList.remove('active');
+      });
+      const target = document.getElementById(viewId);
+      if(target) {
+        target.classList.add('active');
+        window.scrollTo({top: 0, behavior: 'smooth'});
       }
-      if (key === LS.budgets) {
-        return (window.buggets && window.buggets.length) ? window.buggets : defaultValue;
-      }
-      try {
-        const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : defaultValue;
-      } catch (e) {
-        return defaultValue;
+      if(viewId === 'home') {
+        renderPublicGallery();
+        renderFeaturedArtists();
+      } else if(viewId === 'artist') {
+        renderArtistPanel();
+      } else if(viewId === 'client') {
+        renderClientTickets();
       }
     }
 
-    function saveData(key, value) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (e) {
-        console.warn("Aviso LocalStorage:", e);
-      }
-    }
-
-    function initData() {
-      if (!localStorage.getItem(LS.credits)) {
-        localStorage.setItem(LS.credits, JSON.stringify(2)); // Definido para 2 créditos iniciais
-      }
-    }
-
-    function addCredits(amount) {
-      let credits = loadData(LS.credits, 0);
-      if (amount === 30) credits += 10;
-      else if (amount === 50) credits += 20;
-      else if (amount === 200) credits += 50;
-      saveData(LS.credits, credits);
-      renderCredits();
-    }
-
-    function showView(viewId, param) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      const activeView = document.getElementById(viewId);
-      if (activeView) activeView.classList.add('active');
-      
-      if (viewId === 'artist-public' && param) {
-        renderPublicProfile(param);
-      }
-      renderAll();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function renderAll() {
-      renderPortfolio();
-      renderPublicGallery();
-      renderBudgets();
-      renderClientTickets();
-      renderCredits();
-      renderProfilesList();
-      renderFeaturedArtists();
-    }
-
-    /* FAQ Toggle */
+    // FAQ Accordion
     function toggleFaq(btn) {
       const item = btn.parentElement;
       item.classList.toggle('active');
@@ -850,562 +855,650 @@
       span.textContent = item.classList.contains('active') ? '-' : '+';
     }
 
-    /* Modal de Termos de Uso */
+    // Modal Termos
     function openTermsModal(e) {
-      if(e) e.preventDefault();
+      e.preventDefault();
       document.getElementById('termsModal').classList.add('active');
     }
-
     function closeTermsModal() {
       document.getElementById('termsModal').classList.remove('active');
     }
-
     function acceptTermsAndClose() {
       document.getElementById('termsCheck').checked = true;
       closeTermsModal();
     }
 
-    /* Upload de Fotos do Portfólio associando ao Perfil Ativo (uma foto por vez) */
-    function handlePortfolioUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    // Validação de CPF
+    function validateCPF(cpf) {
+      cpf = cpf.replace(/[^\d]+/g,'');
+      if(cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+      let add = 0;
+      for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i);
+      let rev = 11 - (add % 11);
+      if (rev === 10 || rev === 11) rev = 0;
+      if (rev !== parseInt(cpf.charAt(9))) return false;
+      add = 0;
+      for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i);
+      rev = 11 - (add % 11);
+      if (rev === 10 || rev === 11) rev = 0;
+      if (rev !== parseInt(cpf.charAt(10))) return false;
+      return true;
+    }
 
-      const activeProfileId = loadData(LS.activeProfile, null);
-      if (!activeProfileId) {
-        alert('Por favor, entre em uma conta de artista para publicar fotos no seu portfólio.');
+    // Firebase Auth State Listener
+    auth.onAuthStateChanged(async (user) => {
+      const loggedOutView = document.getElementById('loggedOutView');
+      const loggedInView = document.getElementById('loggedInView');
+      const currentUserEmail = document.getElementById('currentUserEmail');
+      const portfolioUploadContainer = document.getElementById('portfolioUploadContainer');
+
+      if (user) {
+        currentUserEmailVal = user.email;
+        if(loggedOutView) loggedOutView.style.display = 'none';
+        if(loggedInView) loggedInView.style.display = 'block';
+        if(currentUserEmail) currentUserEmail.textContent = user.email;
+        if(portfolioUploadContainer) portfolioUploadContainer.style.display = 'flex';
+
+        // Buscar documento do artista vinculado a este e-mail ou UID
+        try {
+          const snap = await db.collection('artists').where('email', '==', user.email).get();
+          if(!snap.empty) {
+            currentArtistId = snap.docs[0].id;
+          } else {
+            currentArtistId = user.uid;
+          }
+        } catch(err) {
+          currentArtistId = user.uid;
+        }
+      } else {
+        currentUserEmailVal = null;
+        if(loggedOutView) loggedOutView.style.display = 'block';
+        if(loggedInView) loggedInView.style.display = 'none';
+        if(portfolioUploadContainer) portfolioUploadContainer.style.display = 'none';
+        currentArtistId = null;
+      }
+      loadCloudData();
+    });
+
+    // Login por E-mail e Senha
+    async function loginArtist() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value;
+      if(!email || !pass) {
+        alert('Por favor, preencha e-mail e senha.');
         return;
       }
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+        alert('Login efetuado com sucesso!');
+        loadCloudData();
+      } catch (err) {
+        alert('Erro ao entrar: ' + err.message);
+      }
+    }
 
-      const profiles = loadData(LS.profiles, []);
-      const activeProfile = profiles.find(p => p.id === activeProfileId);
+    // Logout
+    async function logoutArtist() {
+      try {
+        await auth.signOut();
+        currentArtistId = null;
+        alert('Você saiu da sua conta.');
+        loadCloudData();
+      } catch(err) {
+        console.error(err);
+      }
+    }
 
-      const reader = new FileReader();
-      reader.onload = function(ev) {
-        const portfolio = loadData(LS.portfolio, []);
-        portfolio.unshift({
-          id: Date.now().toString(),
-          src: ev.target.result,
-          title: file.name,
-          ownerId: activeProfileId,
-          ownerName: activeProfile ? activeProfile.name : ''
+    // Carregar dados do Firestore em tempo real
+    function loadCloudData() {
+      // Artistas
+      db.collection('artists').onSnapshot(snapshot => {
+        artistsCache = [];
+        snapshot.forEach(doc => {
+          artistsCache.push({ id: doc.id, ...doc.data() });
         });
-        saveData(LS.portfolio, portfolio);
+        renderArtistsList();
+        renderFeaturedArtists();
+        renderActiveProfileCard();
+        renderBudgets();
+      }, err => console.log('Erro artistas:', err));
+
+      // Portfólio (Fotos)
+      db.collection('portfolio').onSnapshot(snapshot => {
+        portfolioCache = [];
+        snapshot.forEach(doc => {
+          portfolioCache.push({ id: doc.id, ...doc.data() });
+        });
         renderPortfolio();
         renderPublicGallery();
-      };
-      reader.readAsDataURL(file);
-      e.target.value = '';
+      }, err => console.log('Erro portfolio:', err));
+
+      // Leads / Orçamentos
+      db.collection('budgets').onSnapshot(snapshot => {
+        budgetsCache = [];
+        snapshot.forEach(doc => {
+          budgetsCache.push({ id: doc.id, ...doc.data() });
+        });
+        renderBudgets();
+        renderClientTickets();
+      }, err => console.log('Erro budgets:', err));
     }
 
-    function renderPortfolio() {
-      const list = loadData(LS.portfolio, []);
-      const container = document.getElementById('portfolioGallery');
-      const activeId = loadData(LS.activeProfile, null);
-
-      const filtered = activeId ? list.filter(i => (i.ownerId || null) === activeId) : [];
-      const duplicated = filtered.length ? filtered.concat(filtered) : [];
-
-      if (!filtered.length) {
-        container.innerHTML = `<div style="padding:20px; color:var(--muted); font-size:13px; text-align:center; width:100%;">Nenhuma foto no seu portfólio ainda. Adicione acima.</div>`;
-        return;
-      }
-
-      container.innerHTML = duplicated.map(item => `
-        <div class="thumb">
-          <img src="${item.src}" alt="${item.title}">
-          <div class="meta">${item.title}</div>
-          <div class="actions" style="position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:flex-end; padding:8px;">
-            <button class="btn sm" style="background:rgba(255,255,255,0.9); border:1px solid var(--border);" onclick="removePortfolioItem('${item.id}')">Excluir</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function removePortfolioItem(id) {
-      let list = loadData(LS.portfolio, []);
-      list = list.filter(item => item.id !== id);
-      saveData(LS.portfolio, list);
-      renderPortfolio();
-      renderPublicGallery();
-    }
-
-    /* Galeria Pública global exibindo as fotos de TODOS os artistas */
-    function renderPublicGallery() {
-      const list = loadData(LS.portfolio, []);
-      const profiles = loadData(LS.profiles, []);
-      const container = document.getElementById('publicGallery');
-
-      const slice = list.length ? list : [
-        { src: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400', title: 'Mural RJ' },
-        { src: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=400', title: 'Arte Urbana' }
-      ];
-      const duplicated = slice.concat(slice);
-
-      container.innerHTML = duplicated.map(item => {
-        const owner = profiles.find(p => p.id === item.ownerId);
-        const artistName = owner ? owner.name : (item.ownerName || 'Artista Grafiterj');
-        return `
-          <div class="thumb">
-            <img src="${item.src}" alt="${item.title}">
-            <div class="meta">${artistName}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    /* Perfil Público Específico do Artista */
-    function renderPublicProfile(artistId) {
-      const profiles = loadData(LS.profiles, []);
-      const portfolio = loadData(LS.portfolio, []);
-      const p = profiles.find(item => item.id === artistId);
-      const container = document.getElementById('publicProfileContent');
-      const portfolioContainer = document.getElementById('publicProfilePortfolio');
-
-      if (!p) {
-        container.innerHTML = `<p style="color:var(--muted)">Artista não encontrado.</p>`;
-        portfolioContainer.innerHTML = '';
-        return;
-      }
-
-      container.innerHTML = `
-        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
-          ${p.photo ? `<img src="${p.photo}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : `<div style="width:80px; height:80px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:24px;">🎨</div>`}
-          <div>
-            <h2 style="font-family:var(--font-heading); font-size:24px; color:var(--accent-2);">${p.name}</h2>
-            <p style="font-size:13px; color:var(--muted);">${p.location} • <strong>Especialidades:</strong> ${p.specialties}</p>
-          </div>
-        </div>
-        <p style="font-size:14px; color:var(--muted); line-height:1.5;">${p.bio}</p>
-      `;
-
-      const artistPortfolio = portfolio.filter(i => i.ownerId === artistId);
-      const duplicated = artistPortfolio.length ? artistPortfolio.concat(artistPortfolio) : [];
-      
-      if (!artistPortfolio.length) {
-        portfolioContainer.innerHTML = `<div style="padding:20px; color:var(--muted); font-size:13px; text-align:center; width:100%;">Este artista ainda não publicou fotos no portfólio.</div>`;
-        return;
-      }
-
-      portfolioContainer.innerHTML = duplicated.map(item => `
-        <div class="thumb">
-          <img src="${item.src}" alt="${item.title}">
-          <div class="meta">${item.title}</div>
-        </div>
-      `).join('');
-    }
-
-    /* Budgets / Leads */
-    function renderBudgets() {
-      const list = loadData(LS.budgets, []);
-      const container = document.getElementById('budgetsList');
-
-      if (!list.length) {
-        container.innerHTML = '<p style="color:var(--muted)">Nenhum pedido de orçamento aberto no momento.</p>';
-        return;
-      }
-
-      container.innerHTML = list.map(item => `
-        <div class="lead-item">
-          <div>
-            <strong>${item.address || 'Rio de Janeiro, RJ'}</strong>
-            <p style="font-size:13px; color:var(--muted); margin-top:4px;">${item.desc || item.descricao || ''}</p>
-            <p style="font-size:12px; color:var(--accent-2); margin-top:6px;">
-              ${item.unlocked ? `Contactar: ${item.phone || item.telefone} (${item.client || item.nome})` : 'Contato bloqueado'}
-            </p>
-          </div>
-          <div>
-            ${item.unlocked ? 
-              `<span class="status-badge closed">Liberado</span>` : 
-              `<button class="btn primary sm" onclick="unlockLead('${item.id}')">Ver WhatsApp (1 Crédito)</button>`
-            }
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function unlockLead(id) {
-      let credits = loadData(LS.credits, 0);
-      if (credits < 1) {
-        alert('Você não tem créditos suficientes! Adquira um pacote para continuar.');
-        showView('plans');
-        return;
-      }
-
-      let list = loadData(LS.budgets, []);
-      const index = list.findIndex(item => item.id === id);
-      if (index !== -1) {
-        list[index].unlocked = true;
-        credits -= 1;
-        saveData(LS.budgets, list);
-        saveData(LS.credits, credits);
-        renderAll();
-      }
-    }
-
-    /* Envio de Pedido do Cliente */
-    async function submitRequest(e) {
-      e.preventDefault();
-      const termsChecked = document.getElementById('termsCheck').checked;
-      if (!termsChecked) {
-        alert('Você precisa aceitar os Termos de Uso para prosseguir.');
-        return;
-      }
-
-      const client = document.getElementById('clientName').value;
-      const phone = document.getElementById('clientPhone').value;
-      const address = document.getElementById('address').value;
-      const desc = document.getElementById('desc').value;
-
-      const newBudget = {
-        client, 
-        phone, 
-        address, 
-        desc,
-        status: 'open',
-        unlocked: false
-      };
-
-      if (window.salvarPedidoNoFirebase) {
-        await window.salvarPedidoNoFirebase(newBudget);
-      }
-
-      document.getElementById('requestForm').reset();
-      renderAll();
-    }
-
-    function renderClientTickets() {
-      const list = loadData(LS.budgets, []);
-      const container = document.getElementById('clientTickets');
-      
-      container.innerHTML = list.map(item => `
-        <div class="lead-item" style="flex-direction:column; align-items:flex-start;">
-          <span class="status-badge open">Ativo</span>
-          <strong style="margin-top:6px;">${item.address || 'Rio de Janeiro'}</strong>
-          <p style="font-size:12px; color:var(--muted);">${item.desc || ''}</p>
-        </div>
-      `).join('');
-    }
-
-    /* Créditos */
-    function renderCredits() {
-      const credits = loadData(LS.credits, 0);
-      document.getElementById('creditsDisplay').textContent = `${credits} Crédito${credits !== 1 ? 's' : ''}`;
-      renderActiveProfileCard();
-    }
-
-    /* Perfis de Artistas */
-    function renderProfilesList() {
-      const profiles = loadData(LS.profiles, []);
-      const activeId = loadData(LS.activeProfile, null);
-      const myOwnedProfiles = loadData(LS.myProfiles, []);
-      const container = document.getElementById('profilesList');
-
-      if (!profiles.length) {
-        container.innerHTML = '<div style="color:var(--muted); font-size:13px;">Nenhum artista cadastrado.</div>';
-        return;
-      }
-
-      container.innerHTML = profiles.map(p => {
-        const isOwner = myOwnedProfiles.includes(p.id);
-        return `
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; border-radius:8px; padding:10px; border:1px solid var(--border); background:#fff; flex-wrap:wrap;">
-            <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
-              ${p.photo ? `<img src="${p.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : `<div style="width:36px; height:36px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted);">🎨</div>`}
-              <div>
-                <div style="font-weight:700; color:var(--accent-2);">${p.name}</div>
-                <div style="font-size:12px; color:var(--muted);">${p.location} • ${p.specialties}</div>
-              </div>
-            </div>
-            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-              <button class="btn sm" onclick="showView('artist-public', '${p.id}')">Ver Perfil</button>
-              ${activeId === p.id ? `<span style="font-size:11px; color:var(--accent); font-weight:700;">Ativo</span>` : `<button class="btn sm" onclick="selectProfile('${p.id}')">Entrar</button>`}
-              ${isOwner ? `
-                <button class="btn sm" onclick="editProfile('${p.id}')">Editar</button>
-                <button class="btn sm" onclick="deleteProfile('${p.id}')">Excluir</button>
-              ` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderActiveProfileCard() {
-      const profiles = loadData(LS.profiles, []);
-      const activeId = loadData(LS.activeProfile, null);
-      const container = document.getElementById('activeProfileCard');
-      if (!activeId) {
-        container.innerHTML = `<div style="color:var(--muted); display:flex; justify-content:space-between; align-items:center;"><span>Nenhum perfil logado no momento.</span></div>`;
-        return;
-      }
-      const p = profiles.find(pp => pp.id === activeId);
-      if (!p) {
-        container.innerHTML = `<div style="color:var(--muted)">Perfil não encontrado</div>`;
-        return;
-      }
-
-      container.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
-          <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
-            ${p.photo ? `<img src="${p.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : ``}
-            <div>
-              <div style="font-weight:800; font-size:16px; color:var(--accent-2);">${p.name}</div>
-              <div style="font-size:13px; color:var(--muted);">${p.location} • ${p.specialties}</div>
-            </div>
-          </div>
-          <button class="btn sm" onclick="logoutProfile()" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171;">Sair da Conta</button>
-        </div>
-        <div style="font-size:13px; color:var(--muted); margin-top:6px;">${p.bio}</div>
-      `;
-    }
-
-    function logoutProfile() {
-      localStorage.removeItem(LS.activeProfile);
-      renderAll();
-      alert('Você saiu da sua conta de artista.');
-    }
-
-    let editingProfileId = null;
-
+    // Criar ou Atualizar Perfil & Conta Auth
     async function createOrUpdateProfile(e) {
       e.preventDefault();
       const name = document.getElementById('artistName').value.trim();
       const email = document.getElementById('artistEmail').value.trim();
-      const password = document.getElementById('artistPassword').value.trim();
+      const password = document.getElementById('artistPassword').value;
       const cpf = document.getElementById('artistCpf').value.trim();
       const location = document.getElementById('artistLocation').value.trim();
       const bio = document.getElementById('artistBio').value.trim();
-      const specialties = document.getElementById('artistSpec').value.trim();
+      const spec = document.getElementById('artistSpec').value.trim();
       const photoInput = document.getElementById('artistPhotoInput');
 
-      const profiles = loadData(LS.profiles, []);
-
-      // Validar CPF único
-      const existingCpf = profiles.find(p => p.cpf === cpf && p.id !== editingProfileId);
-      if (existingCpf) {
-        alert('Este CPF já está cadastrado na plataforma. Cada artista pode ter apenas um cadastro por CPF.');
+      if(!validateCPF(cpf)) {
+        alert('CPF inválido! Por favor, insira um CPF válido.');
         return;
       }
 
-      const processSave = (photoData) => {
-        const profileData = {
-          name,
-          email,
-          password,
-          cpf,
-          location,
-          bio,
-          specialties,
-          photo: photoData || (editingProfileId ? (profiles.find(p => p.id === editingProfileId)?.photo || '') : '')
-        };
+      // Verificar CPF duplicado em outros cadastros
+      const cpfExists = artistsCache.find(a => a.cpf === cpf && a.id !== currentArtistId);
+      if(cpfExists) {
+        alert('Este CPF já está cadastrado em outro perfil.');
+        return;
+      }
 
-        if (editingProfileId) {
-          profileData.id = editingProfileId;
-          if (window.atualizarArtistaNoFirebase) {
-            window.atualizarArtistaNoFirebase(profileData);
-          }
-          editingProfileId = null;
-        } else {
-          if (window.salvarArtistaNoFirebase) {
-            window.salvarArtistaNoFirebase(profileData);
-          }
-        }
-
-        document.getElementById('profileForm').reset();
-      };
-
-      if (photoInput.files && photoInput.files[0]) {
+      let photoUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=60';
+      if(photoInput.files && photoInput.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(ev) {
-          processSave(ev.target.result);
+        reader.onload = async function(evt) {
+          photoUrl = evt.target.result;
+          await saveArtistRecord(name, email, password, cpf, location, bio, spec, photoUrl);
         };
         reader.readAsDataURL(photoInput.files[0]);
       } else {
-        processSave(null);
+        const existing = artistsCache.find(a => a.id === currentArtistId);
+        if(existing && existing.photo) photoUrl = existing.photo;
+        await saveArtistRecord(name, email, password, cpf, location, bio, spec, photoUrl);
+      }
+    }
+
+    async function saveArtistRecord(name, email, password, cpf, location, bio, spec, photoUrl) {
+      try {
+        let uid = currentArtistId;
+        // Se não estiver logado via Auth, tenta criar usuário Auth
+        if(!auth.currentUser) {
+          try {
+            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            uid = cred.user.uid;
+          } catch(authErr) {
+            // Se o e-mail já existe no auth, tenta logar
+            try {
+              const cred = await auth.signInWithEmailAndPassword(email, password);
+              uid = cred.user.uid;
+            } catch(loginErr) {
+              alert('Erro de Autenticação: ' + authErr.message);
+              return;
+            }
+          }
+        }
+
+        const artistData = {
+          name,
+          email,
+          cpf,
+          location,
+          bio,
+          specialty: spec,
+          photo: photoUrl,
+          credits: 0,
+          unlimitedExpires: null,
+          updatedAt: new Date().toISOString()
+        };
+
+        await db.collection('artists').doc(uid).set(artistData, { merge: true });
+        currentArtistId = uid;
+        alert('Perfil e conta salvos com sucesso na nuvem!');
+        clearProfileForm();
+        renderArtistPanel();
+      } catch(err) {
+        alert('Erro ao salvar perfil: ' + err.message);
       }
     }
 
     function clearProfileForm() {
-      document.getElementById('profileForm').reset();
-      editingProfileId = null;
+      document.getElementById('artistName').value = '';
+      document.getElementById('artistEmail').value = '';
+      document.getElementById('artistPassword').value = '';
+      document.getElementById('artistCpf').value = '';
+      document.getElementById('artistLocation').value = '';
+      document.getElementById('artistBio').value = '';
+      document.getElementById('artistSpec').value = '';
+      document.getElementById('artistPhotoInput').value = '';
     }
 
-    function selectProfile(id) {
-      saveData(LS.activeProfile, id);
-      renderAll();
-      showView('artist');
+    // Renderizar Lista de Perfis e Perfil Ativo
+    function renderArtistsList() {
+      const container = document.getElementById('profilesList');
+      if(!container) return;
+      container.innerHTML = '';
+      artistsCache.forEach(artist => {
+        const div = document.createElement('div');
+        div.style.cssText = "padding:8px 10px; border:1px solid var(--border); border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:#fafafa;";
+        div.innerHTML = `
+          <div style="font-size:13px; font-weight:600;">${artist.name} (${artist.location})</div>
+          <button class="btn sm" onclick="selectArtist('${artist.id}')">Selecionar</button>
+        `;
+        container.appendChild(div);
+      });
+      renderActiveProfileCard();
     }
 
-    function editProfile(id) {
-      const profiles = loadData(LS.profiles, []);
-      const myOwnedProfiles = loadData(LS.myProfiles, []);
-      
-      if (!myOwnedProfiles.includes(id)) {
-        alert('Você não tem permissão para editar o perfil de outro artista.');
-        return;
-      }
-
-      const p = profiles.find(pp => pp.id === id);
-      if (!p) return alert('Perfil não encontrado.');
-      
-      editingProfileId = id;
-      document.getElementById('artistName').value = p.name;
-      document.getElementById('artistEmail').value = p.email || '';
-      document.getElementById('artistPassword').value = p.password || '';
-      document.getElementById('artistCpf').value = p.cpf || '';
-      document.getElementById('artistLocation').value = p.location;
-      document.getElementById('artistBio').value = p.bio;
-      document.getElementById('artistSpec').value = p.specialties;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function deleteProfile(id) {
-      const myOwnedProfiles = loadData(LS.myProfiles, []);
-      if (!myOwnedProfiles.includes(id)) {
-        alert('Você não tem permissão para excluir o perfil de outro artista.');
-        return;
-      }
-
-      if (!confirm('Deseja realmente excluir este perfil?')) return;
-      
-      if (window.deletarArtistaNoFirebase) {
-        window.deletarArtistaNoFirebase(id);
+    function selectArtist(id) {
+      const artist = artistsCache.find(a => a.id === id);
+      if(artist) {
+        currentArtistId = id;
+        document.getElementById('artistName').value = artist.name || '';
+        document.getElementById('artistEmail').value = artist.email || '';
+        document.getElementById('artistCpf').value = artist.cpf || '';
+        document.getElementById('artistLocation').value = artist.location || '';
+        document.getElementById('artistBio').value = artist.bio || '';
+        document.getElementById('artistSpec').value = artist.specialty || '';
+        renderActiveProfileCard();
+        renderPortfolio();
       }
     }
 
-    /* Destaques (Home) */
-    function renderFeaturedArtists() {
-      const profiles = loadData(LS.profiles, []);
-      const portfolio = loadData(LS.portfolio, []);
-      const container = document.getElementById('featuredArtists');
-      if (!profiles.length) {
-        container.innerHTML = '<div style="color:var(--muted)">Nenhum artista cadastrado ainda.</div>';
-        return;
-      }
-      const html = profiles.slice(0,4).map(p => {
-        const sample = portfolio.find(i => i.ownerId === p.id);
-        const img = sample ? sample.src : (p.photo || 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400');
-        return `
-          <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
-            <div style="width:54px; height:48px; border-radius:8px; overflow:hidden; border:1px solid var(--border); flex-shrink:0;"><img src="${img}" style="width:100%; height:100%; object-fit:cover;"></div>
-            <div style="flex:1; min-width:0;">
-              <div style="font-weight:700; color:var(--accent-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
-              <div style="font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.location} • ${p.specialties}</div>
-            </div>
+    function renderActiveProfileCard() {
+      const card = document.getElementById('activeProfileCard');
+      const creditsDisplay = document.getElementById('creditsDisplay');
+      const unlimitedStatus = document.getElementById('unlimitedPlanStatus');
+      const unlimitedDateSpan = document.getElementById('unlimitedDate');
+
+      if(!card) return;
+      const artist = artistsCache.find(a => a.id === currentArtistId);
+
+      if(artist) {
+        card.innerHTML = `
+          <div style="display:flex; gap:10px; align-items:center;">
+            <img src="${artist.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=60'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
             <div>
-              <button class="btn sm" onclick="event.stopPropagation(); showView('artist-public', '${p.id}')">Ver</button>
+              <div style="font-size:13px; font-weight:700;">${artist.name}</div>
+              <div style="font-size:11px; color:var(--muted);">${artist.location} | ${artist.email || ''}</div>
             </div>
           </div>
         `;
-      }).join('');
-      container.innerHTML = html;
+        const credits = artist.credits || 0;
+        if(creditsDisplay) creditsDisplay.textContent = credits + ' Créditos';
+
+        // Validação de Plano Ilimitado (6 Meses)
+        if(artist.unlimitedExpires) {
+          const expDate = new Date(artist.unlimitedExpires);
+          const now = new Date();
+          if(expDate > now) {
+            if(unlimitedStatus) unlimitedStatus.style.display = 'block';
+            if(unlimitedDateSpan) unlimitedDateSpan.textContent = expDate.toLocaleDateString('pt-BR');
+          } else {
+            if(unlimitedStatus) unlimitedStatus.style.display = 'none';
+          }
+        } else {
+          if(unlimitedStatus) unlimitedStatus.style.display = 'none';
+        }
+      } else {
+        card.innerHTML = `<p style="font-size:12px; color:var(--muted);">Nenhum perfil selecionado ou logado.</p>`;
+        if(creditsDisplay) creditsDisplay.textContent = '0 Créditos';
+        if(unlimitedStatus) unlimitedStatus.style.display = 'none';
+      }
     }
 
-    // Inicializar na carga da página
-    initData();
-  </script>
+    // Gerenciamento de Portfólio em Nuvem (Firestore)
+    async function handlePortfolioUpload(event) {
+      if(!currentArtistId) {
+        alert('Você precisa estar logado ou selecionar um perfil para adicionar fotos ao portfólio.');
+        return;
+      }
+      const file = event.target.files[0];
+      if(!file) return;
 
-  <!-- SDKs do Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+      const artist = artistsCache.find(a => a.id === currentArtistId);
+      const authorName = artist ? artist.name : 'Artista Grafiterj';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAMTNTizh8Sm6Fe-8p-KZxDAqYAdQGnDfc",
-      authDomain: "grafiterj.firebaseapp.com",
-      projectId: "grafiterj",
-      storageBucket: "grafiterj.firebasestorage.app",
-      messagingSenderId: "921737954297",
-      appId: "1:921737954297:web:a586c06ed3f388e8863328"
-    };
+      const reader = new FileReader();
+      reader.onload = async function(evt) {
+        const imageUrl = evt.target.result;
+        try {
+          await db.collection('portfolio').add({
+            artistId: currentArtistId,
+            author: authorName,
+            url: imageUrl,
+            createdAt: new Date().toISOString()
+          });
+          alert('Foto adicionada ao portfólio em nuvem!');
+          event.target.value = '';
+        } catch(err) {
+          alert('Erro ao enviar foto: ' + err.message);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    async function deletePortfolioItem(id, artistId) {
+      if(!auth.currentUser && currentArtistId !== artistId) {
+        alert('Apenas o dono desta conta logada pode excluir fotos do portfólio.');
+        return;
+      }
+      if(confirm('Deseja realmente excluir esta obra do portfólio?')) {
+        try {
+          await db.collection('portfolio').doc(id).delete();
+          alert('Obra excluída com sucesso.');
+        } catch(err) {
+          alert('Erro ao excluir: ' + err.message);
+        }
+      }
+    }
 
-    // Escuta em tempo real dos Artistas
-    onSnapshot(collection(db, "artistas"), (snapshot) => {
-      const list = [];
-      snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
-      window.profiles = list;
-      if (typeof renderAll === 'function') renderAll();
-    });
+    function renderPortfolio() {
+      const track = document.getElementById('portfolioGallery');
+      if(!track) return;
+      track.innerHTML = '';
 
-    // Escuta em tempo real dos Pedidos
-    onSnapshot(collection(db, "pedidos"), (snapshot) => {
-      const list = [];
-      snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
-      window.buggets = list;
-      if (typeof renderAll === 'function') renderAll();
-    });
+      const myWorks = currentArtistId ? portfolioCache.filter(item => item.artistId === currentArtistId) : portfolioCache;
 
-    // Salvar Pedido no Firestore
-    window.salvarPedidoNoFirebase = async function(dadosPedido) {
-      try {
-        await addDoc(collection(db, "pedidos"), {
-          ...dadosPedido,
-          criadoEm: new Date().toISOString()
+      if(myWorks.length === 0) {
+        track.innerHTML = `<div style="padding:20px; font-size:13px; color:var(--muted);">Nenhuma foto no portfólio ainda. Clique em "+ Adicionar Foto".</div>`;
+        return;
+      }
+
+      myWorks.forEach(item => {
+        const canDelete = auth.currentUser || item.artistId === currentArtistId;
+        const div = document.createElement('div');
+        div.className = 'thumb';
+        div.innerHTML = `
+          <img src="${item.url}" alt="Obra">
+          <div class="meta">${item.author || 'Artista'}</div>
+          ${canDelete ? `<button class="delete-btn" onclick="deletePortfolioItem('${item.id}', '${item.artistId}')">&times;</button>` : ''}
+        `;
+        track.appendChild(div);
+      });
+    }
+
+    // Galeria Pública (Home)
+    function renderPublicGallery() {
+      const track = document.getElementById('publicGallery');
+      if(!track) return;
+      track.innerHTML = '';
+
+      if(portfolioCache.length === 0) {
+        track.innerHTML = `<div style="padding:20px; font-size:13px; color:var(--muted);">Nenhum mural postado recentemente na comunidade.</div>`;
+        return;
+      }
+
+      portfolioCache.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'thumb';
+        div.innerHTML = `
+          <img src="${item.url}" alt="Mural">
+          <div class="meta">${item.author || 'Artista'}</div>
+        `;
+        div.onclick = () => viewArtistPublicProfile(item.artistId);
+        track.appendChild(div);
+      });
+    }
+
+    function renderFeaturedArtists() {
+      const container = document.getElementById('featuredArtists');
+      if(!container) return;
+      container.innerHTML = '';
+
+      if(artistsCache.length === 0) {
+        container.innerHTML = `<p style="font-size:13px; color:var(--muted);">Nenhum artista em destaque no momento.</p>`;
+        return;
+      }
+
+      artistsCache.slice(0, 4).forEach(artist => {
+        const div = document.createElement('div');
+        div.style.cssText = "display:flex; gap:10px; align-items:center; margin-bottom:10px; padding:8px; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer;";
+        div.onclick = () => viewArtistPublicProfile(artist.id);
+        div.innerHTML = `
+          <img src="${artist.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=60'}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+          <div>
+            <div style="font-size:13px; font-weight:700;">${artist.name}</div>
+            <div style="font-size:11px; color:var(--muted);">${artist.location}</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function viewArtistPublicProfile(artistId) {
+      const artist = artistsCache.find(a => a.id === artistId);
+      if(!artist) return;
+
+      const content = document.getElementById('publicProfileContent');
+      content.innerHTML = `
+        <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+          <img src="${artist.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=60'}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid var(--border);">
+          <div>
+            <h2 style="font-family:var(--font-heading); font-size:24px; color:var(--accent);">${artist.name}</h2>
+            <p style="font-size:13px; color:var(--muted);">Localização: ${artist.location}</p>
+            <p style="font-size:13px; color:var(--muted);">Especialidades: ${artist.specialty || 'Murais'}</p>
+          </div>
+        </div>
+        <p style="margin-top:14px; font-size:14px; color:var(--text);">${artist.bio || 'Sem bio cadastrada.'}</p>
+      `;
+
+      const track = document.getElementById('publicProfilePortfolio');
+      track.innerHTML = '';
+      const works = portfolioCache.filter(item => item.artistId === artistId);
+      if(works.length === 0) {
+        track.innerHTML = `<div style="padding:16px; font-size:13px; color:var(--muted);">Este artista ainda não publicou fotos em seu portfólio.</div>`;
+      } else {
+        works.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'thumb';
+          div.innerHTML = `<img src="${item.url}" alt="Obra">`;
+          track.appendChild(div);
         });
-        alert("Solicitação de orçamento enviada com sucesso!");
-      } catch (e) {
-        console.error("Erro no Firebase (Pedidos):", e);
-        alert("Erro ao enviar pedido para a nuvem.");
       }
-    };
 
-    // Salvar Artista no Firestore com controle de dono
-    window.salvarArtistaNoFirebase = async function(dadosArtista) {
+      showView('artist-public');
+    }
+
+    // Solicitação de Orçamentos (Leads)
+    async function submitRequest(event) {
+      event.preventDefault();
+      const name = document.getElementById('clientName').value.trim();
+      const phone = document.getElementById('clientPhone').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const desc = document.getElementById('desc').value.trim();
+      const wallPhotoInput = document.getElementById('wallPhoto');
+
+      let wallPhotoUrl = '';
+      if(wallPhotoInput.files && wallPhotoInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async function(evt) {
+          wallPhotoUrl = evt.target.result;
+          await saveBudgetRecord(name, phone, address, desc, wallPhotoUrl);
+        };
+        reader.readAsDataURL(wallPhotoInput.files[0]);
+      } else {
+        await saveBudgetRecord(name, phone, address, desc, '');
+      }
+    }
+
+    async function saveBudgetRecord(name, phone, address, desc, wallPhotoUrl) {
       try {
-        const docRef = await addDoc(collection(db, "artistas"), {
-          ...dadosArtista,
-          criadoEm: new Date().toISOString()
+        await db.collection('budgets').add({
+          clientName: name,
+          clientPhone: phone,
+          address: address,
+          description: desc,
+          wallPhoto: wallPhotoUrl,
+          status: 'Aberto',
+          unlockedBy: [],
+          createdAt: new Date().toISOString()
         });
-
-        let myOwned = JSON.parse(localStorage.getItem('gj_my_profiles_ownership_v1') || '[]');
-        myOwned.push(docRef.id);
-        localStorage.setItem('gj_my_profiles_ownership_v1', JSON.stringify(myOwned));
-
-        localStorage.setItem('gj_active_profile_v1', JSON.stringify(docRef.id));
-
-        alert("Perfil de artista cadastrado com sucesso!");
-        if (typeof renderAll === 'function') renderAll();
-      } catch (e) {
-        console.error("Erro no Firebase (Artistas):", e);
-        alert("Erro ao salvar perfil do artista na nuvem.");
+        alert('Pedido de orçamento publicado com sucesso no Mural de Leads!');
+        document.getElementById('requestForm').reset();
+        showView('home');
+      } catch(err) {
+        alert('Erro ao enviar orçamento: ' + err.message);
       }
-    };
+    }
 
-    // Atualizar Artista no Firestore
-    window.atualizarArtistaNoFirebase = async function(dadosArtista) {
-      try {
-        const docRef = doc(db, "artistas", dadosArtista.id);
-        const { id, ...dataToUpdate } = dadosArtista;
-        await updateDoc(docRef, dataToUpdate);
-        alert("Perfil atualizado com sucesso!");
-        if (typeof renderAll === 'function') renderAll();
-      } catch (e) {
-        console.error("Erro ao atualizar artista:", e);
-        alert("Erro ao atualizar perfil na nuvem.");
+    function renderBudgets() {
+      const container = document.getElementById('budgetsList');
+      if(!container) return;
+      container.innerHTML = '';
+
+      if(budgetsCache.length === 0) {
+        container.innerHTML = `<p style="font-size:13px; color:var(--muted);">Nenhum pedido de orçamento no momento.</p>`;
+        return;
       }
-    };
 
-    // Deletar Artista no Firestore
-    window.deletarArtistaNoFirebase = async function(id) {
-      try {
-        await deleteDoc(doc(db, "artistas", id));
-        
-        let myOwned = JSON.parse(localStorage.getItem('gj_my_profiles_ownership_v1') || '[]');
-        myOwned = myOwned.filter(item => item !== id);
-        localStorage.setItem('gj_my_profiles_ownership_v1', JSON.stringify(myOwned));
+      const currentArtist = artistsCache.find(a => a.id === currentArtistId);
 
-        if (JSON.parse(localStorage.getItem('gj_active_profile_v1')) === id) {
-          localStorage.removeItem('gj_active_profile_v1');
+      budgetsCache.forEach(budget => {
+        const unlockedList = budget.unlockedBy || [];
+        const isUnlocked = currentArtistId && unlockedList.includes(currentArtistId);
+
+        // Verificar se plano ilimitado está ativo
+        let hasUnlimited = false;
+        if(currentArtist && currentArtist.unlimitedExpires) {
+          if(new Date(currentArtist.unlimitedExpires) > new Date()) hasUnlimited = true;
         }
 
-        alert("Perfil excluído com sucesso.");
-        if (typeof renderAll === 'function') renderAll();
-      } catch (e) {
-        console.error("Erro ao excluir artista:", e);
-        alert("Erro ao excluir perfil.");
+        const div = document.createElement('div');
+        div.className = 'lead-item';
+        div.innerHTML = `
+          <div>
+            <div style="font-weight:700; font-size:14px;">${budget.address}</div>
+            <div style="font-size:13px; color:var(--muted); margin-top:2px;">${budget.description}</div>
+            <div style="font-size:12px; color:var(--accent-2); margin-top:4px;">Solicitante: ${budget.clientName}</div>
+            ${isUnlocked || hasUnlimited ? `<div style="font-size:12px; font-weight:600; color:#166534; margin-top:4px;">WhatsApp Liberado: <a href="https://wa.me/55${budget.clientPhone.replace(/\D/g,'')}" target="_blank" style="color:#166534;">${budget.clientPhone}</a></div>` : ''}
+          </div>
+          <div>
+            <span class="status-badge ${budget.status === 'Aberto' ? 'open' : 'closed'}">${budget.status}</span>
+            ${!isUnlocked && !hasUnlimited ? `<button class="btn primary sm" style="margin-left:8px;" onclick="unlockLead('${budget.id}')">Desbloquear (1 Crédito)</button>` : ''}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function unlockLead(budgetId) {
+      if(!currentArtistId) {
+        alert('Selecione ou entre com um perfil de artista para desbloquear leads.');
+        showView('artist');
+        return;
       }
+
+      const artist = artistsCache.find(a => a.id === currentArtistId);
+      if(!artist) return;
+
+      // Verificar plano ilimitado
+      let hasUnlimited = false;
+      if(artist.unlimitedExpires && new Date(artist.unlimitedExpires) > new Date()) {
+        hasUnlimited = true;
+      }
+
+      let credits = artist.credits || 0;
+      if(!hasUnlimited && credits <= 0) {
+        alert('Seus créditos acabaram! Adquira mais créditos ou assine o plano ilimitado.');
+        showView('plans');
+        return;
+      }
+
+      try {
+        const budgetRef = db.collection('budgets').doc(budgetId);
+        const doc = await budgetRef.get();
+        if(!doc.exists) return;
+        const data = doc.data();
+        let unlockedBy = data.unlockedBy || [];
+        if(!unlockedBy.includes(currentArtistId)) {
+          unlockedBy.push(currentArtistId);
+          await budgetRef.update({ unlockedBy: unlockedBy });
+
+          if(!hasUnlimited) {
+            credits -= 1;
+            await db.collection('artists').doc(currentArtistId).update({ credits: credits });
+          }
+          alert('Contato desbloqueado com sucesso!');
+        }
+      } catch(err) {
+        alert('Erro ao desbloquear: ' + err.message);
+      }
+    }
+
+    // Chamados do Cliente
+    function renderClientTickets() {
+      const container = document.getElementById('clientTickets');
+      if(!container) return;
+      container.innerHTML = '';
+
+      if(budgetsCache.length === 0) {
+        container.innerHTML = `<p style="font-size:13px; color:var(--muted);">Nenhum chamado registrado.</p>`;
+        return;
+      }
+
+      budgetsCache.forEach(budget => {
+        const div = document.createElement('div');
+        div.className = 'lead-item';
+        div.innerHTML = `
+          <div>
+            <div style="font-weight:700; font-size:14px;">${budget.address}</div>
+            <div style="font-size:13px; color:var(--muted);">${budget.description}</div>
+          </div>
+          <span class="status-badge ${budget.status === 'Aberto' ? 'open' : 'closed'}">${budget.status}</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Simulador de Confirmação e Adição de Créditos / Planos (6 Meses)
+    async function addCredits(amount) {
+      // Função acionada ao clicar nos links de pagamento
+      console.log('Link de pagamento acionado para valor:', amount);
+    }
+
+    async function simulatePayment(amount, creditsToAdd, planType) {
+      if(!currentArtistId) {
+        alert('Por favor, selecione ou entre com um perfil de artista no Painel Grafiteiro antes de testar a compra.');
+        showView('artist');
+        return;
+      }
+
+      const artist = artistsCache.find(a => a.id === currentArtistId);
+      if(!artist) return;
+
+      try {
+        const artistRef = db.collection('artists').doc(currentArtistId);
+        if(planType === 'Unlimited' || amount === 200) {
+          // Validade de 6 meses
+          const now = new Date();
+          now.setMonth(now.getMonth() + 6);
+          await artistRef.update({
+            unlimitedExpires: now.toISOString()
+          });
+          alert('Pagamento simulado aprovado com sucesso! Plano Ilimitado de 6 meses ativado.');
+        } else {
+          const currentCredits = artist.credits || 0;
+          const newCredits = currentCredits + creditsToAdd;
+          await artistRef.update({
+            credits: newCredits
+          });
+          alert(`Pagamento simulado aprovado com sucesso! +${creditsToAdd} créditos adicionados ao seu perfil.`);
+        }
+        renderActiveProfileCard();
+        showView('artist');
+      } catch(err) {
+        alert('Erro ao atualizar créditos: ' + err.message);
+      }
+    }
+
+    // Inicialização da Aplicação
+    window.onload = function() {
+      loadCloudData();
     };
   </script>
 </body>
