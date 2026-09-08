@@ -622,7 +622,7 @@
                 <li>Acesso ao Mural de Leads</li>
                 <li>Desbloqueio de Oportunidades</li>
               </ul>
-              <a href="https://mpago.la/1vucjSV" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;">Comprar por R$ 30</a>
+              <a href="https://mpago.la/1vucjSV" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;" onclick="addCredits(30)">Comprar por R$ 30</a>
             </div>
           </div>
 
@@ -636,7 +636,7 @@
                   <li>Maior Saldo de Créditos</li>
                   <li>Destaque no Mural do Cliente</li>
                 </ul>
-                <a href="https://mpago.la/2LV6ctf" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;">Comprar por R$ 50</a>
+                <a href="https://mpago.la/2LV6ctf" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;" onclick="addCredits(50)">Comprar por R$ 50</a>
               </div>
             </div>
           </div>
@@ -649,7 +649,7 @@
                 <li>Acesso Ilimitado a Leads</li>
                 <li>Selo de Artista Verificado</li>
               </ul>
-              <a href="https://mpago.la/2n8ok9A" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;">Comprar por R$ 200</a>
+              <a href="https://mpago.la/2n8ok9A" target="_blank" rel="noopener" class="btn primary" style="width:100%; justify-content:center;" onclick="addCredits(200)">Comprar por R$ 200</a>
             </div>
           </div>
         </div>
@@ -809,6 +809,15 @@
       if (!localStorage.getItem(LS.credits)) {
         localStorage.setItem(LS.credits, JSON.stringify(2)); // Definido para 2 créditos iniciais
       }
+    }
+
+    function addCredits(amount) {
+      let credits = loadData(LS.credits, 0);
+      if (amount === 30) credits += 10;
+      else if (amount === 50) credits += 20;
+      else if (amount === 200) credits += 50;
+      saveData(LS.credits, credits);
+      renderCredits();
     }
 
     function showView(viewId, param) {
