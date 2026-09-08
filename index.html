@@ -94,6 +94,7 @@
       color:var(--text);
       cursor:pointer;
       display:inline-flex; align-items:center; gap:8px;
+      text-decoration: none;
     }
     .btn.primary{
       background: linear-gradient(90deg,var(--accent-2),#e9732f);
@@ -138,7 +139,7 @@
       align-items:center;
       justify-content:space-between;
     }
-    .hero-left{ max-width:62%; }
+    .hero-left{ max-width:100%; }
     .hero h2{
       font-family:var(--font-heading);
       font-size:36px;
@@ -210,6 +211,37 @@
       font-weight:600;
       border:1px solid rgba(15,23,42,0.04);
       backdrop-filter: blur(4px);
+    }
+
+    /* Carrossel de Clientes / Rodapé */
+    .clients-footer-carousel {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 16px 0;
+    }
+    .clients-track {
+      display: flex;
+      gap: 32px;
+      width: max-content;
+      animation: scrollLeft 25s linear infinite;
+      align-items: center;
+    }
+    .clients-footer-carousel:hover .clients-track {
+      animation-play-state: paused;
+    }
+    .client-logo-item {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      padding: 0 16px;
+      white-space: nowrap;
     }
 
     /* FAQ Accordion */
@@ -338,14 +370,6 @@
             <button class="btn" onclick="showView('artist')">Sou Artista / Grafiteiro</button>
           </div>
         </div>
-
-        <div style="width:36%; display:flex; flex-direction:column; gap:10px; align-items:flex-end;">
-          <div style="width:100%; text-align:right;">
-            <div style="font-size:18px; font-weight:700; color:var(--accent-2);" id="creditsDisplayHeader">0 Créditos</div>
-            <div style="color:var(--muted); font-size:13px;">Use créditos para desbloquear contatos</div>
-            <button class="btn" style="margin-top:10px;" onclick="showView('plans')">Comprar Créditos</button>
-          </div>
-        </div>
       </div>
 
       <div class="grid">
@@ -367,26 +391,31 @@
                 <img src="https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400&auto=format&fit=crop&q=60" alt="Murais">
                 <h3>Murais</h3>
                 <p>Projetos em fachadas e espaços públicos — do orçamento à execução com artistas locais.</p>
+                <a href="https://wa.me/5521973772819?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20Murais" target="_blank" rel="noopener" class="btn primary sm" style="margin-top:auto; justify-content:center;">Fale no WhatsApp</a>
               </div>
               <div class="service">
                 <img src="https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=400&auto=format&fit=crop&q=60" alt="Pintura de Telas">
                 <h3>Pintura de Telas</h3>
                 <p>Peças autorais sob encomenda para residências e ambientes comerciais.</p>
+                <a href="https://wa.me/5521973772819?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20Pintura%20de%20Telas" target="_blank" rel="noopener" class="btn primary sm" style="margin-top:auto; justify-content:center;">Fale no WhatsApp</a>
               </div>
               <div class="service">
                 <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400&auto=format&fit=crop&q=60" alt="Vestuário">
                 <h3>Vestuário & Objetos</h3>
                 <p>Customização e arte aplicada em roupas, acessórios e peças utilitárias.</p>
+                <a href="https://wa.me/5521973772819?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20Vestuário%20e%20Objetos" target="_blank" rel="noopener" class="btn primary sm" style="margin-top:auto; justify-content:center;">Fale no WhatsApp</a>
               </div>
               <div class="service">
                 <img src="https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=400&auto=format&fit=crop&q=60" alt="Curadoria">
                 <h3>Curadoria</h3>
                 <p>Seleção artística para mostras, eventos e intervenções urbanas.</p>
+                <a href="https://wa.me/5521973772819?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20Curadoria" target="_blank" rel="noopener" class="btn primary sm" style="margin-top:auto; justify-content:center;">Fale no WhatsApp</a>
               </div>
               <div class="service">
                 <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&auto=format&fit=crop&q=60" alt="Workshops">
                 <h3>Workshops</h3>
                 <p>Workshops práticos e teóricos sobre técnicas de muralismo e intervenções urbanas.</p>
+                <a href="https://wa.me/5521973772819?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20Workshops" target="_blank" rel="noopener" class="btn primary sm" style="margin-top:auto; justify-content:center;">Fale no WhatsApp</a>
               </div>
             </div>
           </div>
@@ -482,7 +511,7 @@
                   <label for="artistSpec">Especialidades</label>
                   <input id="artistSpec" type="text" placeholder="Ex: Murais, Stencil, Lettering" required>
                 </div>
-                <div style="display:flex; gap:8px;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
                   <button class="btn primary" type="submit">Salvar Perfil</button>
                   <button class="btn" type="button" onclick="clearProfileForm()">Limpar</button>
                 </div>
@@ -704,6 +733,24 @@
       </div>
     </div>
 
+    <!-- Rodapé com Carrossel de Clientes e Grandes Marcas -->
+    <div class="clients-footer-carousel">
+      <div class="clients-track">
+        <div class="client-logo-item">ATELIÉ CARIOCA</div>
+        <div class="client-logo-item">GALERIA RIO</div>
+        <div class="client-logo-item">URBAN SPACES RJ</div>
+        <div class="client-logo-item">COPA DESIGN</div>
+        <div class="client-logo-item">CULTURAL BOTAFOGO</div>
+        <div class="client-logo-item">MURAL BRASIL</div>
+        <div class="client-logo-item">ATELIÉ CARIOCA</div>
+        <div class="client-logo-item">GALERIA RIO</div>
+        <div class="client-logo-item">URBAN SPACES RJ</div>
+        <div class="client-logo-item">COPA DESIGN</div>
+        <div class="client-logo-item">CULTURAL BOTAFOGO</div>
+        <div class="client-logo-item">MURAL BRASIL</div>
+      </div>
+    </div>
+
     <footer>
       &copy; Grafiterj — Curadoria & Plataforma de Arte Urbana RJ
     </footer>
@@ -793,12 +840,17 @@
       closeTermsModal();
     }
 
-    /* Upload de Fotos do Portfólio associando ao Nome do Perfil Ativo */
+    /* Upload de Fotos do Portfólio associando ao Perfil Ativo (uma foto por vez) */
     function handlePortfolioUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
 
       const activeProfileId = loadData(LS.activeProfile, null);
+      if (!activeProfileId) {
+        alert('Por favor, entre em uma conta de artista para publicar fotos no seu portfólio.');
+        return;
+      }
+
       const profiles = loadData(LS.profiles, []);
       const activeProfile = profiles.find(p => p.id === activeProfileId);
 
@@ -825,8 +877,13 @@
       const container = document.getElementById('portfolioGallery');
       const activeId = loadData(LS.activeProfile, null);
 
-      const filtered = activeId ? list.filter(i => (i.ownerId || null) === activeId) : list;
-      const duplicated = filtered.concat(filtered); // Duplicar para loop contínuo perfeito
+      const filtered = activeId ? list.filter(i => (i.ownerId || null) === activeId) : [];
+      const duplicated = filtered.length ? filtered.concat(filtered) : [];
+
+      if (!filtered.length) {
+        container.innerHTML = `<div style="padding:20px; color:var(--muted); font-size:13px; text-align:center; width:100%;">Nenhuma foto no seu portfólio ainda. Adicione acima.</div>`;
+        return;
+      }
 
       container.innerHTML = duplicated.map(item => `
         <div class="thumb">
@@ -847,7 +904,7 @@
       renderPublicGallery();
     }
 
-    /* Galeria Pública com Carrossel da Direita para a Esquerda */
+    /* Galeria Pública global com Carrossel da Direita para a Esquerda */
     function renderPublicGallery() {
       const list = loadData(LS.portfolio, []);
       const profiles = loadData(LS.profiles, []);
@@ -857,7 +914,7 @@
         { src: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400', title: 'Mural RJ' },
         { src: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=400', title: 'Arte Urbana' }
       ];
-      const duplicated = slice.concat(slice); // Duplicar itens para efeito contínuo
+      const duplicated = slice.concat(slice);
 
       container.innerHTML = duplicated.map(item => {
         const owner = profiles.find(p => p.id === item.ownerId);
@@ -897,7 +954,13 @@
       `;
 
       const artistPortfolio = portfolio.filter(i => i.ownerId === artistId);
-      const duplicated = artistPortfolio.concat(artistPortfolio);
+      const duplicated = artistPortfolio.length ? artistPortfolio.concat(artistPortfolio) : [];
+      
+      if (!artistPortfolio.length) {
+        portfolioContainer.innerHTML = `<div style="padding:20px; color:var(--muted); font-size:13px; text-align:center; width:100%;">Este artista ainda não publicou fotos no portfólio.</div>`;
+        return;
+      }
+
       portfolioContainer.innerHTML = duplicated.map(item => `
         <div class="thumb">
           <img src="${item.src}" alt="${item.title}">
@@ -1002,7 +1065,6 @@
     function renderCredits() {
       const credits = loadData(LS.credits, 0);
       document.getElementById('creditsDisplay').textContent = `${credits} Crédito${credits !== 1 ? 's' : ''}`;
-      document.getElementById('creditsDisplayHeader').textContent = `${credits} Crédito${credits !== 1 ? 's' : ''}`;
       renderActiveProfileCard();
     }
 
@@ -1029,7 +1091,7 @@
                 <div style="font-size:12px; color:var(--muted);">${p.location} • ${p.specialties}</div>
               </div>
             </div>
-            <div style="display:flex; gap:6px; align-items:center;">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
               <button class="btn sm" onclick="showView('artist-public', '${p.id}')">Ver Perfil</button>
               ${activeId === p.id ? `<span style="font-size:11px; color:var(--accent); font-weight:700;">Ativo</span>` : `<button class="btn sm" onclick="selectProfile('${p.id}')">Entrar</button>`}
               ${isOwner ? `
@@ -1047,7 +1109,7 @@
       const activeId = loadData(LS.activeProfile, null);
       const container = document.getElementById('activeProfileCard');
       if (!activeId) {
-        container.innerHTML = `<div style="color:var(--muted)">Nenhum perfil selecionado</div>`;
+        container.innerHTML = `<div style="color:var(--muted); display:flex; justify-content:space-between; align-items:center;"><span>Nenhum perfil logado no momento.</span></div>`;
         return;
       }
       const p = profiles.find(pp => pp.id === activeId);
@@ -1057,15 +1119,24 @@
       }
 
       container.innerHTML = `
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
-          ${p.photo ? `<img src="${p.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : ``}
-          <div>
-            <div style="font-weight:800; font-size:16px; color:var(--accent-2);">${p.name}</div>
-            <div style="font-size:13px; color:var(--muted);">${p.location} • ${p.specialties}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
+            ${p.photo ? `<img src="${p.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` : ``}
+            <div>
+              <div style="font-weight:800; font-size:16px; color:var(--accent-2);">${p.name}</div>
+              <div style="font-size:13px; color:var(--muted);">${p.location} • ${p.specialties}</div>
+            </div>
           </div>
+          <button class="btn sm" onclick="logoutProfile()" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171;">Sair da Conta</button>
         </div>
-        <div style="font-size:13px; color:var(--muted);">${p.bio}</div>
+        <div style="font-size:13px; color:var(--muted); margin-top:6px;">${p.bio}</div>
       `;
+    }
+
+    function logoutProfile() {
+      localStorage.removeItem(LS.activeProfile);
+      renderAll();
+      alert('Você saiu da sua conta de artista.');
     }
 
     let editingProfileId = null;
@@ -1187,7 +1258,7 @@
       }
       const html = profiles.slice(0,4).map(p => {
         const sample = portfolio.find(i => i.ownerId === p.id);
-        const img = sample ? sample.src : (p.photo || 'https://via.placeholder.com/300x200?text=Sem+Imagem');
+        const img = sample ? sample.src : (p.photo || 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400');
         return `
           <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; cursor:pointer;" onclick="showView('artist-public', '${p.id}')">
             <div style="width:54px; height:48px; border-radius:8px; overflow:hidden; border:1px solid var(--border);"><img src="${img}" style="width:100%; height:100%; object-fit:cover;"></div>
@@ -1251,7 +1322,7 @@
         alert("Solicitação de orçamento enviada com sucesso!");
       } catch (e) {
         console.error("Erro no Firebase (Pedidos):", e);
-        alert("Erro ao enviar pedido para a nuvem.");
+        alert("Erro ao enviar pedido para la nuvem.");
       }
     };
 
