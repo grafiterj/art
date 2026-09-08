@@ -1510,7 +1510,7 @@
       });
     }
 
-    // Função de Checkout Integrada com Mercado Pago e Firebase
+    // Função de Checkout Integrada com Mercado Pago (Links Reais)
     async function initiateCheckout(planType, price, creditsToAdd) {
       if(!currentArtistId) {
         alert('Por favor, selecione ou entre com um perfil de artista no Painel Grafiteiro antes de efetuar uma compra.');
@@ -1518,14 +1518,13 @@
         return;
       }
 
-      // Substitua os links abaixo pelas URLs de Links de Pagamento reais geradas no painel do Mercado Pago
       let baseURL = '';
-      if (planType === 'starter') baseURL = 'https://mpago.la/SEU_LINK_STARTER';
-      if (planType === 'pro') baseURL = 'https://mpago.la/SEU_LINK_PRO';
-      if (planType === 'unlimited') baseURL = 'https://mpago.la/SEU_LINK_ILIMITADO';
+      if (planType === 'starter') baseURL = 'https://mpago.la/1vucjSV';
+      if (planType === 'pro') baseURL = 'https://mpago.la/2LV6ctf';
+      if (planType === 'unlimited') baseURL = 'https://mpago.la/2n8ok9A';
 
-      if (!baseURL || baseURL.includes('SEU_LINK')) {
-        alert('Por favor, configure os links de pagamento do Mercado Pago na função initiateCheckout.');
+      if (!baseURL) {
+        alert('Selecione um plano válido.');
         return;
       }
 
